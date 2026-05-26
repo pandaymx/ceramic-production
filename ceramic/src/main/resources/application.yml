@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: ceramic-admin
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ceramic_system
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+# MyBatis-Plus Configuration
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  configuration:
+    map-underline-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+
+# Custom AI Engine integration properties
+ai-service:
+  base-url: http://localhost:8000
+  predict-path: /api/forecast/predict
+
+server:
+  port: 8080

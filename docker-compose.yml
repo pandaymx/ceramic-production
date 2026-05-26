@@ -1,0 +1,80 @@
+services:
+  # PostgreSQL 数据库服务
+  postgres:
+    image: postgres:16-alpine
+    container_name: ceramic-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ceramic_system
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init_schema.sql:/docker-entrypoint-initdb.d/01-init_schema.sql
+      - ./sql/init_data.sql:/docker-entrypoint-initdb.d/02-init_data.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ceramic-network
+
+  # Python FastAPI AI 服务
+  ai-service:
+    build:
+      context: ./ceramic-ai
+      dockerfile: Dockerfile
+    container_name: ceramic-ai
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ceramic_system
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ceramic-network
+    command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  # Java Spring Boot 后端服务
+  backend:
+    build:
+      context: ./ceramic
+      dockerfile: Dockerfile
+    container_name: ceramic-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ceramic_system
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      AI_SERVICE_BASE_URL: http://ai-service:8000
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ceramic-network
+
+  # React 前端服务
+  web:
+    build:
+      context: ./ceramic-web
+      dockerfile: Dockerfile
+    container_name: ceramic-web
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080
+    depends_on:
+      - backend
+    networks:
+      - ceramic-network
+
+volumes:
+  postgres_data:
+
+networks:
+  ceramic-network:
+    driver: bridge

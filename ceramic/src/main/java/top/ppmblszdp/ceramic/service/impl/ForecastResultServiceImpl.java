@@ -21,17 +21,13 @@ public class ForecastResultServiceImpl extends ServiceImpl<ForecastResultMapper,
 
     @Value("${ai-service.predict-path:/api/forecast/predict}")
     private String predictPath;
-    
-    @Value("${ai-service.comparison-path:/api/forecast/comparison}")
-    private String comparisonPath;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
     @SuppressWarnings("unchecked")
-    public Map<String, Object> getForecastPrediction(int days, String model, boolean useSeasonal, boolean includeBacktest) {
-        String url = baseUrl + predictPath + "?days=" + days + "&model=" + model 
-                    + "&use_seasonal=" + useSeasonal + "&include_backtest=" + includeBacktest;
+    public Map<String, Object> getForecastPrediction(int days, String model) {
+        String url = baseUrl + predictPath + "?days=" + days + "&model=" + model;
         try {
             // Attempt to call the Python FastAPI AI predictor
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
@@ -48,21 +44,6 @@ public class ForecastResultServiceImpl extends ServiceImpl<ForecastResultMapper,
 
         // High-fidelity fallback predictor when Python AI sidecar is offline
         return generateFallbackForecast(days);
-    }
-    
-    @Override
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> getBacktestComparison(int testDays) {
-        String url = baseUrl + comparisonPath + "?test_days=" + testDays;
-        try {
-            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
-            if (response != null && response.containsKey("data")) {
-                return (Map<String, Object>) response.get("data");
-            }
-        } catch (Exception e) {
-            System.err.println("Failed to get comparison data: " + e.getMessage());
-        }
-        return null;
     }
 
     private Map<String, Object> generateFallbackForecast(int days) {

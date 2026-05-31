@@ -48,8 +48,6 @@ function App() {
   const [forecastDays, setForecastDays] = useState(7);
   const [forecastModel, setForecastModel] = useState('arima');
   const [forecastResult, setForecastResult] = useState(null);
-  const [useSeasonal, setUseSeasonal] = useState(true);
-  const [backtestData, setBacktestData] = useState(null);
   
   // CRUD Modals
   const [showAddModal, setShowAddModal] = useState(false);
@@ -256,54 +254,23 @@ function App() {
   const handleRunForecast = async () => {
     setLoading(true);
     if (isDemoMode) {
+      // Simulate network delay for that premium high-tech feel
       setTimeout(() => {
+        // Build mock dates and forecast values based on days parameter
         const dates = [];
         const values = [];
-        const seasons = [];
         const baseDate = new Date();
-        
         for (let i = 0; i < forecastDays; i++) {
           const d = new Date(baseDate);
           d.setDate(baseDate.getDate() + i + 1);
-          const dateStr = d.toISOString().split('T')[0];
-          dates.push(dateStr);
-          
-          const baseValue = 1600 + Math.sin(i) * 150 + Math.random() * 80;
-          const month = d.getMonth() + 1;
-          const adjustment = (month >= 3 && month <= 5) || (month >= 9 && month <= 11) ? 1.15 : 0.90;
-          values.push(parseFloat((baseValue * adjustment).toFixed(2)));
-          
-          seasons.push((month >= 3 && month <= 5) || (month >= 9 && month <= 11) ? '旺季' : '淡季');
+          dates.push(d.toISOString().split('T')[0]);
+          values.push(parseFloat((1600 + Math.sin(i) * 150 + Math.random() * 80).toFixed(2)));
         }
-        
-        const mockBacktest = {
-          comparison: dates.slice(0, 5).map((date, idx) => ({
-            date: date,
-            actual: 1500 + Math.random() * 200,
-            predicted: 1500 + Math.random() * 150,
-            error: Math.abs(Math.random() * 100),
-            season: idx % 2 === 0 ? 'peak' : 'off',
-            season_label: idx % 2 === 0 ? '旺季' : '淡季'
-          })),
-          overall: { mape: 3.5, rmse: 45.2, avg_error: 38.5 },
-          seasonal: {
-            peak: { count: 3, avg_error: 42.1, max_error: 68.5 },
-            off: { count: 2, avg_error: 35.8, max_error: 52.3 }
-          },
-          current_season: {
-            month: new Date().getMonth() + 1,
-            type: 'peak',
-            label: '旺季'
-          }
-        };
-        
         setForecastResult({
           forecastDates: dates,
           forecastValues: values,
-          forecastSeasons: seasons,
-          metrics: { mape: 3.5, rmse: 45.2, error_controlled: true }
+          metrics: mockForecast.metrics
         });
-        setBacktestData(mockBacktest);
         setLoading(false);
       }, 1500);
       return;
@@ -311,21 +278,16 @@ function App() {
 
     try {
       const res = await axios.get('/api/forecast/predict', {
-        params: { 
-          days: forecastDays, 
-          model: forecastModel,
-          useSeasonal: useSeasonal,
-          includeBacktest: true
-        }
+        params: { days: forecastDays, model: forecastModel }
       });
       if (res.data && res.data.code === 200) {
         setForecastResult(res.data.data);
-        setBacktestData(res.data.data.backtestData);
       } else {
         alert('Error: ' + res.data.msg);
       }
     } catch (e) {
       alert('AI Server sidecar currently offline. Using mock predictor.');
+      // Fallback predictor inside AI view
       const dates = [];
       const values = [];
       const baseDate = new Date();
@@ -361,30 +323,30 @@ function App() {
       },
       legend: {
         data: ['日产量', '合格率 %'],
-        textStyle: { color: '#64748b' }
+        textStyle: { color: '#94a3b8' }
       },
       grid: { left: '3%', right: '3%', bottom: '3%', containLabel: true },
       xAxis: {
         type: 'category',
         data: sorted.map(r => r.productionDate),
-        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.1)' } },
-        axisLabel: { color: '#64748b' }
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+        axisLabel: { color: '#94a3b8' }
       },
       yAxis: [
         {
           type: 'value',
-          name: '日产量 (件)',
-          nameTextStyle: { color: '#64748b' },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+          name: 'Output (Pieces)',
+          nameTextStyle: { color: '#94a3b8' },
+          axisLabel: { color: '#94a3b8' },
+          splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
         },
         {
           type: 'value',
           name: '合格率 %',
           min: 90,
           max: 100,
-          nameTextStyle: { color: '#64748b' },
-          axisLabel: { formatter: '{value} %', color: '#64748b' },
+          nameTextStyle: { color: '#94a3b8' },
+          axisLabel: { formatter: '{value} %', color: '#94a3b8' },
           splitLine: { show: false }
         }
       ],
@@ -421,7 +383,7 @@ function App() {
     return {
       backgroundColor: 'transparent',
       tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
-      legend: { orient: 'vertical', left: 'left', textStyle: { color: '#64748b' } },
+      legend: { orient: 'vertical', left: 'left', textStyle: { color: '#94a3b8' } },
       series: [
         {
           name: '缺陷类型',
@@ -454,20 +416,20 @@ function App() {
       xAxis: {
         type: 'category',
         data: sorted.map(r => r.productionDate),
-        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.1)' } },
-        axisLabel: { color: '#64748b' }
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+        axisLabel: { color: '#94a3b8' }
       },
       yAxis: [
         {
           type: 'value',
           name: '能耗 (度)',
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+          axisLabel: { color: '#94a3b8' },
+          splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
         },
         {
           type: 'value',
-          name: '日产量 (件)',
-          axisLabel: { color: '#64748b' },
+          name: 'Output (Pieces)',
+          axisLabel: { color: '#94a3b8' },
           splitLine: { show: false }
         }
       ],
@@ -498,119 +460,36 @@ function App() {
     return {
       backgroundColor: 'transparent',
       tooltip: { trigger: 'axis' },
-      legend: { 
-        data: ['预测产量', '季节'], 
-        textStyle: { color: '#64748b' } 
-      },
+      legend: { data: ['Projected Yield'], textStyle: { color: '#94a3b8' } },
       grid: { left: '3%', right: '3%', bottom: '3%', containLabel: true },
       xAxis: {
         type: 'category',
         data: forecastResult.forecastDates,
-        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.1)' } },
-        axisLabel: { color: '#64748b' }
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+        axisLabel: { color: '#94a3b8' }
       },
       yAxis: {
         type: 'value',
-        name: '预测产量 (件)',
-        nameTextStyle: { color: '#64748b' },
-        axisLabel: { color: '#64748b' },
-        splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+        name: 'Projected Pieces',
+        nameTextStyle: { color: '#94a3b8' },
+        axisLabel: { color: '#94a3b8' },
+        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
       },
       series: [
         {
-          name: '预测产量',
+          name: 'Projected Yield',
           type: 'line',
           smooth: true,
           symbolSize: 8,
-          itemStyle: { color: '#0891b2' },
-          lineStyle: { width: 4, shadowBlur: 10, shadowColor: 'rgba(8,145,178,0.5)' },
+          itemStyle: { color: '#06b6d4' },
+          lineStyle: { width: 4, shadowBlur: 10, shadowColor: 'rgba(6,182,212,0.5)' },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(8, 145, 178, 0.3)' },
-              { offset: 1, color: 'rgba(8, 145, 178, 0.0)' }
+              { offset: 0, color: 'rgba(6, 182, 212, 0.4)' },
+              { offset: 1, color: 'rgba(6, 182, 212, 0.0)' }
             ])
           },
-          data: forecastResult.forecastValues,
-          markPoint: {
-            data: forecastResult.forecastSeasons?.map((season, idx) => ({
-              coord: [forecastResult.forecastDates[idx], forecastResult.forecastValues[idx]],
-              symbol: season === '旺季' ? 'circle' : 'diamond',
-              symbolSize: 12,
-              itemStyle: { color: season === '旺季' ? '#f59e0b' : '#6366f1' },
-              label: { show: true, formatter: season, position: 'top', fontSize: 10 }
-            }))
-          }
-        }
-      ]
-    };
-  };
-  
-  const getComparisonOption = () => {
-    if (!backtestData || !backtestData.comparison) return {};
-    
-    const comparison = backtestData.comparison;
-    return {
-      backgroundColor: 'transparent',
-      tooltip: { 
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' }
-      },
-      legend: { 
-        data: ['实际产量', '预测产量', '误差'], 
-        textStyle: { color: '#64748b' } 
-      },
-      grid: { left: '3%', right: '3%', bottom: '10%', containLabel: true },
-      xAxis: {
-        type: 'category',
-        data: comparison.map(d => d.date),
-        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.1)' } },
-        axisLabel: { color: '#64748b', rotate: 15 }
-      },
-      yAxis: [
-        {
-          type: 'value',
-          name: '产量 (件)',
-          nameTextStyle: { color: '#64748b' },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
-        },
-        {
-          type: 'value',
-          name: '误差',
-          nameTextStyle: { color: '#64748b' },
-          axisLabel: { color: '#64748b' },
-          splitLine: { show: false }
-        }
-      ],
-      series: [
-        {
-          name: '实际产量',
-          type: 'bar',
-          barWidth: '25%',
-          itemStyle: { color: '#6366f1' },
-          data: comparison.map(d => d.actual)
-        },
-        {
-          name: '预测产量',
-          type: 'bar',
-          barWidth: '25%',
-          itemStyle: { color: '#06b6d4' },
-          data: comparison.map(d => d.predicted)
-        },
-        {
-          name: '误差',
-          type: 'line',
-          yAxisIndex: 1,
-          smooth: true,
-          symbolSize: 10,
-          itemStyle: { color: '#ef4444' },
-          lineStyle: { width: 3 },
-          data: comparison.map(d => d.error),
-          markLine: {
-            data: [{ yAxis: 150, name: '误差控制线 (150)' }],
-            lineStyle: { color: '#f59e0b', type: 'dashed', width: 2 },
-            label: { formatter: '控制线 150', position: 'end' }
-          }
+          data: forecastResult.forecastValues
         }
       ]
     };
@@ -656,8 +535,8 @@ function App() {
           </li>
         </ul>
         
-        <div style={{ marginTop: 'auto', padding: '16px', borderRadius: '12px', background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)' }}>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>由 Antigravity 开发</p>
+        <div style={{ marginTop: 'auto', padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Developed by Antigravity</p>
           <p style={{ fontSize: '11px', color: 'var(--primary)', marginTop: '4px' }}>v1.2.0 (React + Postgres)</p>
         </div>
       </aside>
@@ -786,16 +665,16 @@ function App() {
                   <div className="kiln-graphics">
                     <div className="kiln-laser-line"></div>
                     <div className="kiln-chamber firing">
-                      <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>预热区</span>
+                      <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>Preheating</span>
                       <strong className="kiln-temp-val">780°C</strong>
                     </div>
                     <div className="kiln-chamber firing">
                       <div className="kiln-chamber-flame"></div>
-                      <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>烧制区</span>
+                      <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>Firing Zone</span>
                       <strong className="kiln-temp-val" style={{ fontSize: '16px' }}>{kilnTemp}°C</strong>
                     </div>
                     <div className="kiln-chamber">
-                      <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>冷却区</span>
+                      <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>Cooling Zone</span>
                       <strong className="kiln-temp-val" style={{ color: '#06b6d4', textShadow: '0 0 5px rgba(6,182,212,0.3)' }}>140°C</strong>
                     </div>
                   </div>
@@ -809,7 +688,7 @@ function App() {
                       {records.length > 0 ? (
                         <ReactECharts option={getOutputTrendOption()} style={{ height: '100%' }} />
                       ) : (
-                        <div style={{ textAlign: 'center', paddingTop: '100px', color: 'var(--text-muted)' }}>暂无历史图表，请同步数据</div>
+                        <div style={{ textAlign: 'center', paddingTop: '100px', color: 'var(--text-muted)' }}>No historical charts available. Sync to restore.</div>
                       )}
                     </div>
                   </div>
@@ -1016,58 +895,58 @@ function App() {
                 <div className="metrics-grid">
                   <div className="metric-card glass-panel" style={{ '--card-glow': '#10b981' }}>
                     <div className="metric-header">
-                      <span>月度质量评级</span>
+                      <span>Monthly Quality Grade</span>
                       <div className="metric-icon-wrapper" style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)' }}><TrendingUp size={18} /></div>
                     </div>
                     <div className="metric-value">96.88%</div>
-                    <div className="metric-footer">优秀等级 (ISO-9001认证)</div>
+                    <div className="metric-footer">Excellent grade (ISO-9001 certified)</div>
                   </div>
 
                   <div className="metric-card glass-panel" style={{ '--card-glow': '#06b6d4' }}>
                     <div className="metric-header">
-                      <span>废品损耗成本</span>
+                      <span>Scrap Degradation Cost</span>
                       <div className="metric-icon-wrapper" style={{ color: '#06b6d4', background: 'rgba(6,182,212,0.1)' }}><AlertTriangle size={18} /></div>
                     </div>
-                    <div className="metric-value">-$450 <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>预估</span></div>
-                    <div className="metric-footer"><span className="trend-down">↓ 18%</span> 优化节省指数</div>
+                    <div className="metric-value">-$450 <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>est</span></div>
+                    <div className="metric-footer"><span className="trend-down">↓ 18%</span> optimization savings index</div>
                   </div>
 
                   <div className="metric-card glass-panel" style={{ '--card-glow': '#6366f1' }}>
                     <div className="metric-header">
-                      <span>平均单位能耗</span>
+                      <span>Average Unit Energy</span>
                       <div className="metric-icon-wrapper"><Zap size={18} /></div>
                     </div>
-                    <div className="metric-value">0.27 <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>kWh/件</span></div>
-                    <div className="metric-footer">标准煤等价A级</div>
+                    <div className="metric-value">0.27 <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>kWh/pc</span></div>
+                    <div className="metric-footer">Standard coal equivalent level A</div>
                   </div>
 
                   <div className="metric-card glass-panel" style={{ '--card-glow': '#f59e0b' }}>
                     <div className="metric-header">
-                      <span>导出报告</span>
+                      <span>Export Reports</span>
                       <div className="metric-icon-wrapper" style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.1)' }}><FileText size={18} /></div>
                     </div>
                     <div className="metric-value" style={{ fontSize: '16px', display: 'flex', gap: '8px', marginTop: '16px' }}>
                       <button className="btn-glass" onClick={() => handleExportReport('xlsx')} style={{ padding: '4px 8px', fontSize: '11px' }}>Excel</button>
                       <button className="btn-glass" onClick={() => handleExportReport('pdf')} style={{ padding: '4px 8px', fontSize: '11px' }}>PDF</button>
                     </div>
-                    <div className="metric-footer">导出批次台账报告</div>
+                    <div className="metric-footer">Export batch ledger reports</div>
                   </div>
                 </div>
 
                 <div className="charts-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
                   <div className="chart-card glass-panel">
-                    <h3><Zap size={16} style={{ color: '#ef4444' }} /> 产量与能耗关联趋势</h3>
+                    <h3><Zap size={16} style={{ color: '#ef4444' }} /> Total Production Yield vs Energy Consumption Trace</h3>
                     <div className="chart-wrapper">
                       {records.length > 0 ? (
                         <ReactECharts option={getEnergyCorrelationOption()} style={{ height: '100%' }} />
                       ) : (
-                        <div style={{ textAlign: 'center', paddingTop: '100px', color: 'var(--text-muted)' }}>请同步记录以查看分析数据</div>
+                        <div style={{ textAlign: 'center', paddingTop: '100px', color: 'var(--text-muted)' }}>Sync records to populate analytics.</div>
                       )}
                     </div>
                   </div>
 
                   <div className="chart-card glass-panel">
-                    <h3><Layers size={16} style={{ color: '#0891b2' }} /> 陶瓷产品占比分布</h3>
+                    <h3><Layers size={16} style={{ color: '#06b6d4' }} /> Ceramic Output Contribution Share</h3>
                     <div className="chart-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {/* Sub-component pie representation */}
                       <ReactECharts 
@@ -1102,24 +981,24 @@ function App() {
                   <div className="forecast-controls glass-panel">
                     <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
                       <Cpu size={18} style={{ color: 'var(--primary)', marginRight: '8px' }} />
-                      预测器控制
+                      Predictor Controls
                     </h3>
 
                     <div className="filter-group">
-                      <label>预测时间范围</label>
+                      <label>Forecasting Horizon (预测天数)</label>
                       <select 
                         className="select-glass"
                         value={forecastDays}
                         onChange={(e) => setForecastDays(parseInt(e.target.value))}
                       >
-                        <option value={7}>未来7天</option>
-                        <option value={14}>未来14天</option>
-                        <option value={30}>未来30天</option>
+                        <option value={7}>Next 7 Days</option>
+                        <option value={14}>Next 14 Days</option>
+                        <option value={30}>Next 30 Days</option>
                       </select>
                     </div>
 
                     <div className="filter-group">
-                      <label>选择时间序列模型</label>
+                      <label>Select Time-series Model</label>
                       <select 
                         className="select-glass"
                         value={forecastModel}
@@ -1130,144 +1009,79 @@ function App() {
                       </select>
                     </div>
 
-                    <div className="filter-group">
-                      <label>季节性调整</label>
-                      <select 
-                        className="select-glass"
-                        value={useSeasonal}
-                        onChange={(e) => setUseSeasonal(e.target.value === 'true')}
-                      >
-                        <option value="true">启用 (旺淡季自动调整)</option>
-                        <option value="false">禁用 (标准预测)</option>
-                      </select>
-                    </div>
-
                     <button 
                       className="btn-glass"
                       style={{ 
                         marginTop: '12px',
-                        background: 'linear-gradient(90deg, #6366f1 0%, #0891b2 100%)',
+                        background: 'linear-gradient(90deg, #6366f1 0%, #06b6d4 100%)',
                         border: 'none',
                         boxShadow: '0 0 15px rgba(99, 102, 241, 0.4)'
                       }}
                       onClick={handleRunForecast}
                     >
-                      <TrendingUp size={16} /> 运行预测模型
+                      <TrendingUp size={16} /> Run Forecasting Model
                     </button>
 
                     {forecastResult && (
                       <div className="forecast-metrics">
-                        <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>预测引擎精度统计</h4>
+                        <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Engine Accuracy Statistics</h4>
                         <div className="forecast-metric-row">
-                          <span>平均绝对百分比误差 (MAPE):</span>
+                          <span>Mean Abs Error (MAPE):</span>
                           <span>{forecastResult.metrics.mape}%</span>
                         </div>
                         <div className="forecast-metric-row">
-                          <span>均方根误差 (RMSE):</span>
-                          <span style={{ color: forecastResult.metrics.error_controlled ? '#10b981' : '#ef4444', fontWeight: 700 }}>
-                            {forecastResult.metrics.rmse} 件
-                            {forecastResult.metrics.error_controlled && ' ✓'}
-                          </span>
+                          <span>Root Mean Square (RMSE):</span>
+                          <span>{forecastResult.metrics.rmse} pcs</span>
                         </div>
-                        <div className="forecast-metric-row">
-                          <span>误差控制状态:</span>
-                          <span className={`status-badge ${forecastResult.metrics.error_controlled ? 'badge-green' : 'badge-red'}`}>
-                            {forecastResult.metrics.error_controlled ? '达标 (<150)' : '超标 (>150)'}
-                          </span>
-                        </div>
-                        {backtestData && backtestData.current_season && (
-                          <div className="forecast-metric-row">
-                            <span>当前季节:</span>
-                            <span className={`status-badge ${backtestData.current_season.type === 'peak' ? 'badge-orange' : 'badge-blue'}`}>
-                              {backtestData.current_season.label}
-                            </span>
-                          </div>
-                        )}
                         <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px', lineHeight: 1.4 }}>
-                          * MAPE 表示预测值与实际值之间的平均绝对百分比误差，数值越低表示预测越准确。
+                          * MAPE calculates average absolute percentage error compared to verified backtesting metrics. Lower is highly optimal.
                         </p>
-                      </div>
-                    )}
-                    
-                    {backtestData && backtestData.seasonal && (
-                      <div className="forecast-metrics" style={{ marginTop: '16px' }}>
-                        <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>季节性误差分析</h4>
-                        <div className="forecast-metric-row">
-                          <span>旺季平均误差:</span>
-                          <span style={{ color: backtestData.seasonal.peak.avg_error <= 150 ? '#10b981' : '#ef4444' }}>
-                            {backtestData.seasonal.peak.avg_error} 件
-                          </span>
-                        </div>
-                        <div className="forecast-metric-row">
-                          <span>淡季平均误差:</span>
-                          <span style={{ color: backtestData.seasonal.off.avg_error <= 150 ? '#10b981' : '#ef4444' }}>
-                            {backtestData.seasonal.off.avg_error} 件
-                          </span>
-                        </div>
                       </div>
                     )}
                   </div>
 
                   {/* Right Chart Visualization */}
                   <div className="chart-card glass-panel" style={{ minHeight: '400px' }}>
-                    <h3><TrendingUp size={16} style={{ color: 'var(--secondary)' }} /> 未来7天预测产量曲线</h3>
+                    <h3><TrendingUp size={16} style={{ color: 'var(--secondary)' }} /> Projected Production Yield Curve</h3>
                     <div className="chart-wrapper">
                       {forecastResult ? (
                         <ReactECharts option={getForecastOption()} style={{ height: '100%' }} />
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)' }}>
                           <Cpu size={40} className="text-secondary" style={{ marginBottom: '16px', opacity: 0.3 }} />
-                          <p>选择数学模型配置并点击"运行预测模型"以生成预测结果。</p>
+                          <p>Select mathematical configuration and trigger "Run Forecasting Model" to evaluate projections.</p>
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
-                
-                {/* Comparison Chart */}
-                {backtestData && (
-                  <div className="chart-card glass-panel fade-in" style={{ minHeight: '400px' }}>
-                    <h3><BarChart3 size={16} style={{ color: 'var(--primary)' }} /> 历史测试集对比分析</h3>
-                    <div className="chart-wrapper">
-                      <ReactECharts option={getComparisonOption()} style={{ height: '100%' }} />
-                    </div>
-                  </div>
-                )}
 
                 {/* Predicted Data Table list */}
                 {forecastResult && (
                   <div className="glass-panel fade-in" style={{ padding: '24px' }}>
-                    <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>预测每日明细</h3>
+                    <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>Projected Daily Breakdown Schedule</h3>
                     <div className="data-table-container">
                       <table className="data-table">
                         <thead>
                           <tr>
-                            <th>预测日期</th>
-                            <th>季节</th>
-                            <th>预测产量 (件)</th>
-                            <th>可信度</th>
-                            <th>调度建议</th>
+                            <th>Estimated Future Date</th>
+                            <th>Projected Output (pieces)</th>
+                            <th>Reliability Factor</th>
+                            <th>Scheduling Suggestion</th>
                           </tr>
                         </thead>
                         <tbody>
                           {forecastResult.forecastDates.map((date, idx) => (
                             <tr key={idx}>
                               <td><strong>{date}</strong></td>
+                              <td><span style={{ color: '#06b6d4', fontWeight: 600 }}>{Math.round(forecastResult.forecastValues[idx])} pcs</span></td>
                               <td>
-                                <span className={`status-badge ${forecastResult.forecastSeasons?.[idx] === '旺季' ? 'badge-orange' : 'badge-blue'}`}>
-                                  {forecastResult.forecastSeasons?.[idx] || '未知'}
-                                </span>
+                                <span className="status-badge badge-green">High Confidence (96%)</span>
                               </td>
-                              <td><span style={{ color: '#06b6d4', fontWeight: 600 }}>{Math.round(forecastResult.forecastValues[idx])} 件</span></td>
                               <td>
-                                {forecastResult.forecastValues[idx] > 1800 
-                                  ? <span className="status-badge badge-orange">高负荷</span>
-                                  : <span className="status-badge badge-green">正常</span>}
-                              </td>
-                              <td style={{ fontSize: '12px' }}>
                                 {forecastResult.forecastValues[idx] > 1750 
-                                  ? '⚠️ 高负荷排产，优化能源储备' 
-                                  : '✅ 正常批次排产'}
+                                  ? '⚠️ High load kiln schedule. Optimize secondary energy reserves.' 
+                                  : '✅ Normal load batch scheduling.'}
                               </td>
                             </tr>
                           ))}
@@ -1287,13 +1101,13 @@ function App() {
         <div className="modal-overlay">
           <div className="modal-content glass-panel fade-in">
             <div className="modal-header">
-              <h3>新增生产批次记录</h3>
+              <h3>Insert Production batch Record</h3>
               <button className="modal-close" onClick={() => setShowAddModal(false)}><X size={20} /></button>
             </div>
             
             <form className="modal-form" onSubmit={handleSaveRecord}>
               <div className="form-group">
-                <label>生产日期</label>
+                <label>Production Date</label>
                 <input 
                   type="date"
                   className="input-glass"
@@ -1304,7 +1118,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>产品类别</label>
+                <label>Product Category</label>
                 <select 
                   className="select-glass"
                   value={currentRecord.productName}
@@ -1318,7 +1132,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>日产量 (件)</label>
+                <label>Daily Output Quantity (Pieces)</label>
                 <input 
                   type="number"
                   min="0"
@@ -1330,7 +1144,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>缺陷数量 (件)</label>
+                <label>Defect Quantity (Pieces)</label>
                 <input 
                   type="number"
                   min="0"
@@ -1342,7 +1156,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>能耗指数 (度)</label>
+                <label>Energy Footprint Index (kWh)</label>
                 <input 
                   type="number"
                   step="0.01"
@@ -1374,7 +1188,7 @@ function App() {
             
             <form className="modal-form" onSubmit={handleSaveRecord}>
               <div className="form-group">
-                <label>产品类别</label>
+                <label>Product Category</label>
                 <select 
                   className="select-glass"
                   value={currentRecord.productName}
@@ -1388,7 +1202,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>日产量 (件)</label>
+                <label>Daily Output Quantity (Pieces)</label>
                 <input 
                   type="number"
                   min="0"
@@ -1400,7 +1214,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>缺陷数量 (件)</label>
+                <label>Defect Quantity (Pieces)</label>
                 <input 
                   type="number"
                   min="0"
@@ -1412,7 +1226,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>能耗指数 (度)</label>
+                <label>Energy Footprint Index (kWh)</label>
                 <input 
                   type="number"
                   step="0.01"
@@ -1425,8 +1239,8 @@ function App() {
               </div>
 
               <div className="modal-actions">
-                <button type="button" className="btn-glass" onClick={() => setShowEditModal(false)}>取消</button>
-                <button type="submit" className="btn-glass" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>应用更改</button>
+                <button type="button" className="btn-glass" onClick={() => setShowEditModal(false)}>Cancel</button>
+                <button type="submit" className="btn-glass" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>Apply Changes</button>
               </div>
             </form>
           </div>

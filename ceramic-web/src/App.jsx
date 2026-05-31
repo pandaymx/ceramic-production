@@ -971,8 +971,8 @@ function App() {
             type: 'line',
             smooth: true,
             symbolSize: 8,
-            itemStyle: { color: '#ffffff' },
-            lineStyle: { width: 4, type: 'solid', shadowBlur: 10, shadowColor: 'rgba(255,255,255,0.3)' },
+            itemStyle: { color: '#0f172a' },
+            lineStyle: { color: '#0f172a', width: 4, type: 'solid', shadowBlur: 6, shadowColor: 'rgba(15,23,42,0.15)' },
             data: comparison.map(d => d.actual)
           },
           {
@@ -981,7 +981,7 @@ function App() {
             smooth: true,
             symbolSize: 6,
             itemStyle: { color: '#6366f1' },
-            lineStyle: { width: 2.5, type: 'dashed' },
+            lineStyle: { color: '#6366f1', width: 2.5, type: 'dashed' },
             data: comparison.map(d => d.arima)
           },
           {
@@ -990,7 +990,7 @@ function App() {
             smooth: true,
             symbolSize: 6,
             itemStyle: { color: '#10b981' },
-            lineStyle: { width: 2.5, type: 'dashed' },
+            lineStyle: { color: '#10b981', width: 2.5, type: 'dashed' },
             data: comparison.map(d => d.lstm)
           },
           {
@@ -999,7 +999,7 @@ function App() {
             smooth: true,
             symbolSize: 6,
             itemStyle: { color: '#06b6d4' },
-            lineStyle: { width: 2.5, type: 'dashed' },
+            lineStyle: { color: '#06b6d4', width: 2.5, type: 'dashed' },
             data: comparison.map(d => d.svm)
           }
         ]
@@ -1049,8 +1049,8 @@ function App() {
           type: 'line',
           smooth: true,
           symbolSize: 8,
-          itemStyle: { color: '#ffffff' },
-          lineStyle: { width: 4, type: 'solid', shadowBlur: 10, shadowColor: 'rgba(255,255,255,0.3)' },
+          itemStyle: { color: '#0f172a' },
+          lineStyle: { color: '#0f172a', width: 4, type: 'solid', shadowBlur: 6, shadowColor: 'rgba(15,23,42,0.15)' },
           data: comparison.map(d => d.actual)
         },
         {
@@ -1059,7 +1059,7 @@ function App() {
           smooth: true,
           symbolSize: 8,
           itemStyle: { color: '#06b6d4' },
-          lineStyle: { width: 2.5, type: 'dashed' },
+          lineStyle: { color: '#06b6d4', width: 2.5, type: 'dashed' },
           data: comparison.map(d => d.predicted)
         },
         {
@@ -1069,7 +1069,7 @@ function App() {
           smooth: true,
           symbolSize: 6,
           itemStyle: { color: '#ef4444' },
-          lineStyle: { width: 1.5, type: 'dashed' },
+          lineStyle: { color: '#ef4444', width: 1.5, type: 'dashed' },
           data: comparison.map(d => d.error),
           markLine: {
             data: [{ yAxis: 150, name: '误差控制线 (150)' }],

@@ -675,6 +675,9 @@ function App() {
     if (!forecastResult) return {};
     
     const isMulti = forecastResult.isMultiModel;
+    const formattedDates = forecastResult.forecastDates.map(d => 
+      d.includes('-') && d.length > 5 ? d.substring(d.indexOf('-') + 1) : d
+    );
     
     if (isMulti) {
       return {
@@ -684,13 +687,15 @@ function App() {
         grid: { left: '3%', right: '3%', bottom: '12%', top: '18%', containLabel: true },
         xAxis: {
           type: 'category',
-          data: forecastResult.forecastDates,
-          axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
-          axisLabel: { color: '#94a3b8' }
+          data: formattedDates,
+          axisLine: { lineStyle: { color: 'rgba(255,255,255,0.15)' } },
+          axisLabel: { color: '#cbd5e1' }
         },
         yAxis: {
           type: 'value',
           name: '预测产量 (件)',
+          min: (value) => Math.floor(value.min * 0.98),
+          max: (value) => Math.ceil(value.max * 1.02),
           nameTextStyle: { color: '#94a3b8' },
           axisLabel: { color: '#94a3b8' },
           splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
@@ -734,13 +739,15 @@ function App() {
       grid: { left: '3%', right: '3%', bottom: '12%', top: '18%', containLabel: true },
       xAxis: {
         type: 'category',
-        data: forecastResult.forecastDates,
-        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
-        axisLabel: { color: '#94a3b8' }
+        data: formattedDates,
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.15)' } },
+        axisLabel: { color: '#cbd5e1' }
       },
       yAxis: {
         type: 'value',
         name: '预测产量 (件)',
+        min: (value) => Math.floor(value.min * 0.98),
+        max: (value) => Math.ceil(value.max * 1.02),
         nameTextStyle: { color: '#94a3b8' },
         axisLabel: { color: '#94a3b8' },
         splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
@@ -770,6 +777,9 @@ function App() {
 
     const comparison = backtestData.comparison;
     const isMulti = forecastResult?.isMultiModel;
+    const formattedDates = comparison.map(d => 
+      d.date.includes('-') && d.date.length > 5 ? d.date.substring(d.date.indexOf('-') + 1) : d.date
+    );
     
     if (isMulti) {
       return {
@@ -780,28 +790,30 @@ function App() {
         },
         legend: {
           data: ['实际产量', 'ARIMA 预测', 'LSTM 预测', 'SVM 预测'],
-          textStyle: { color: '#64748b' }
+          textStyle: { color: '#94a3b8' }
         },
-        grid: { left: '3%', right: '3%', bottom: '10%', containLabel: true },
+        grid: { left: '3%', right: '3%', bottom: '12%', containLabel: true },
         xAxis: {
           type: 'category',
-          data: comparison.map(d => d.date),
-          axisLine: { lineStyle: { color: 'rgba(0,0,0,0.1)' } },
-          axisLabel: { color: '#64748b', rotate: 15 }
+          data: formattedDates,
+          axisLine: { lineStyle: { color: 'rgba(255,255,255,0.15)' } },
+          axisLabel: { color: '#cbd5e1', rotate: 15 }
         },
         yAxis: {
           type: 'value',
           name: '产量 (件)',
-          nameTextStyle: { color: '#64748b' },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+          min: (value) => Math.floor(value.min * 0.98),
+          max: (value) => Math.ceil(value.max * 1.02),
+          nameTextStyle: { color: '#94a3b8' },
+          axisLabel: { color: '#94a3b8' },
+          splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
         },
         series: [
           {
             name: '实际产量',
             type: 'bar',
             barWidth: '20%',
-            itemStyle: { color: '#94a3b8' },
+            itemStyle: { color: 'rgba(255,255,255,0.15)', borderRadius: [2, 2, 0, 0] },
             data: comparison.map(d => d.actual)
           },
           {
@@ -810,7 +822,7 @@ function App() {
             smooth: true,
             symbolSize: 6,
             itemStyle: { color: '#6366f1' },
-            lineStyle: { width: 2 },
+            lineStyle: { width: 2.5 },
             data: comparison.map(d => d.arima)
           },
           {
@@ -819,7 +831,7 @@ function App() {
             smooth: true,
             symbolSize: 6,
             itemStyle: { color: '#10b981' },
-            lineStyle: { width: 2 },
+            lineStyle: { width: 2.5 },
             data: comparison.map(d => d.lstm)
           },
           {
@@ -828,7 +840,7 @@ function App() {
             smooth: true,
             symbolSize: 6,
             itemStyle: { color: '#06b6d4' },
-            lineStyle: { width: 2 },
+            lineStyle: { width: 2.5 },
             data: comparison.map(d => d.svm)
           }
         ]
@@ -843,28 +855,30 @@ function App() {
       },
       legend: {
         data: ['实际产量', '预测产量', '误差'],
-        textStyle: { color: '#64748b' }
+        textStyle: { color: '#94a3b8' }
       },
-      grid: { left: '3%', right: '3%', bottom: '10%', containLabel: true },
+      grid: { left: '3%', right: '3%', bottom: '12%', containLabel: true },
       xAxis: {
         type: 'category',
-        data: comparison.map(d => d.date),
-        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.1)' } },
-        axisLabel: { color: '#64748b', rotate: 15 }
+        data: formattedDates,
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.15)' } },
+        axisLabel: { color: '#cbd5e1', rotate: 15 }
       },
       yAxis: [
         {
           type: 'value',
           name: '产量 (件)',
-          nameTextStyle: { color: '#64748b' },
-          axisLabel: { color: '#64748b' },
-          splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+          min: (value) => Math.floor(value.min * 0.98),
+          max: (value) => Math.ceil(value.max * 1.02),
+          nameTextStyle: { color: '#94a3b8' },
+          axisLabel: { color: '#94a3b8' },
+          splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
         },
         {
           type: 'value',
           name: '误差',
-          nameTextStyle: { color: '#64748b' },
-          axisLabel: { color: '#64748b' },
+          nameTextStyle: { color: '#94a3b8' },
+          axisLabel: { color: '#94a3b8' },
           splitLine: { show: false }
         }
       ],
@@ -873,14 +887,14 @@ function App() {
           name: '实际产量',
           type: 'bar',
           barWidth: '25%',
-          itemStyle: { color: '#6366f1' },
+          itemStyle: { color: 'rgba(255,255,255,0.15)', borderRadius: [3, 3, 0, 0] },
           data: comparison.map(d => d.actual)
         },
         {
           name: '预测产量',
           type: 'bar',
           barWidth: '25%',
-          itemStyle: { color: '#06b6d4' },
+          itemStyle: { color: '#06b6d4', borderRadius: [3, 3, 0, 0] },
           data: comparison.map(d => d.predicted)
         },
         {

@@ -281,16 +281,32 @@ function App() {
           forecastSeasons: seasons,
           metrics: mockMetrics
         });
+
+        // Dynamically build mock backtest comparison data matching forecastDays
+        const mockComparisonList = [];
+        const testBaseDate = new Date();
+        for (let i = forecastDays; i > 0; i--) {
+          const d = new Date(testBaseDate);
+          d.setDate(testBaseDate.getDate() - i);
+          const dateStr = d.toISOString().split('T')[0].substring(5); // e.g. "05-13"
+          let actualVal, predVal;
+          if (forecastModel === 'svm') {
+            actualVal = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50 + Math.random() * 30);
+            predVal = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50);
+          } else {
+            actualVal = Math.round(1600 + Math.sin(i) * 120 + Math.random() * 50);
+            predVal = Math.round(1600 + Math.sin(i) * 120);
+          }
+          mockComparisonList.push({
+            date: dateStr,
+            actual: actualVal,
+            predicted: predVal,
+            error: Math.abs(actualVal - predVal)
+          });
+        }
+
         setBacktestData({
-          comparison: [
-            { date: '05-13', actual: 1610, predicted: 1580, error: 30 },
-            { date: '05-14', actual: 1180, predicted: 1210, error: 30 },
-            { date: '05-15', actual: 2900, predicted: 2850, error: 50 },
-            { date: '05-16', actual: 980, predicted: 950, error: 30 },
-            { date: '05-17', actual: 1500, predicted: 1520, error: 20 },
-            { date: '05-18', actual: 1250, predicted: 1210, error: 40 },
-            { date: '05-19', actual: 2780, predicted: 2810, error: 30 }
-          ]
+          comparison: mockComparisonList
         });
         setLoading(false);
       }, 1500);
@@ -329,16 +345,32 @@ function App() {
         forecastSeasons: seasons,
         metrics: mockForecast.metrics
       });
+
+      // Dynamically build mock backtest comparison data matching forecastDays
+      const fallbackComparisonList = [];
+      const testBaseDate = new Date();
+      for (let i = forecastDays; i > 0; i--) {
+        const d = new Date(testBaseDate);
+        d.setDate(testBaseDate.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0].substring(5); // e.g. "05-13"
+        let actualVal, predVal;
+        if (forecastModel === 'svm') {
+          actualVal = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50 + Math.random() * 30);
+          predVal = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50);
+        } else {
+          actualVal = Math.round(1600 + Math.sin(i) * 120 + Math.random() * 50);
+          predVal = Math.round(1600 + Math.sin(i) * 120);
+        }
+        fallbackComparisonList.push({
+          date: dateStr,
+          actual: actualVal,
+          predicted: predVal,
+          error: Math.abs(actualVal - predVal)
+        });
+      }
+
       setBacktestData({
-        comparison: [
-          { date: '05-13', actual: 1610, predicted: 1580, error: 30 },
-          { date: '05-14', actual: 1180, predicted: 1210, error: 30 },
-          { date: '05-15', actual: 2900, predicted: 2850, error: 50 },
-          { date: '05-16', actual: 980, predicted: 950, error: 30 },
-          { date: '05-17', actual: 1500, predicted: 1520, error: 20 },
-          { date: '05-18', actual: 1250, predicted: 1210, error: 40 },
-          { date: '05-19', actual: 2780, predicted: 2810, error: 30 }
-        ]
+        comparison: fallbackComparisonList
       });
     }
     setLoading(false);

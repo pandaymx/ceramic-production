@@ -88,7 +88,7 @@ def predict(
     # 5. Generate backtest comparison data if requested
     backtest_data = None
     if include_backtest:
-        backtest_data = CeramicPredictor.backtest_comparison(df, test_days=10)
+        backtest_data = CeramicPredictor.backtest_comparison(df, test_days=days)
         
         # Add season labels to backtest comparison
         if backtest_data and 'comparison' in backtest_data:

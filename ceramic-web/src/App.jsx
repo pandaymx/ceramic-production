@@ -26,6 +26,13 @@ import './App.css';
 // Pre-defined modern ECharts themes/colors
 const chartColors = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
 
+const productTypeMap = {
+  'Fine Porcelain': '日用瓷 (Fine Porcelain)',
+  'Artistic Ceramic': '艺术陶瓷 (Artistic Ceramic)',
+  'Architectural Tile': '建筑陶瓷 (Architectural Tile)',
+  'Sanitary Ware': '卫浴陶瓷 (Sanitary Ware)'
+};
+
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [dbConnected, setDbConnected] = useState(false);
@@ -668,10 +675,10 @@ function App() {
                       onChange={(e) => { setFilterProductName(e.target.value); setCurrentPage(1); }}
                     >
                       <option value="">全部产品</option>
-                      <option value="Fine Porcelain">日用瓷</option>
-                      <option value="Artistic Ceramic">艺术陶</option>
-                      <option value="Architectural Tile">建筑で罫</option>
-                      <option value="Sanitary Ware">卫浴陶器</option>
+                      <option value="Fine Porcelain">日用瓷 (Fine Porcelain)</option>
+                      <option value="Artistic Ceramic">艺术陶瓷 (Artistic Ceramic)</option>
+                      <option value="Architectural Tile">建筑陶瓷 (Architectural Tile)</option>
+                      <option value="Sanitary Ware">卫浴陶瓷 (Sanitary Ware)</option>
                     </select>
                   </div>
 
@@ -761,7 +768,7 @@ function App() {
                                        record.productName === 'Architectural Tile' ? '#10b981' : '#f59e0b',
                                 border: '1px solid rgba(255,255,255,0.05)'
                               }}>
-                                {record.productName}
+                                {productTypeMap[record.productName] || record.productName}
                               </span>
                             </td>
                             <td>{record.outputQuantity.toLocaleString()}</td>
@@ -910,10 +917,10 @@ function App() {
                             type: 'pie',
                             radius: '55%',
                             data: [
-                              { value: 4500, name: 'Fine Porcelain', itemStyle: { color: '#6366f1' } },
-                              { value: 3200, name: 'Artistic Ceramic', itemStyle: { color: '#06b6d4' } },
-                              { value: 8500, name: 'Architectural Tile', itemStyle: { color: '#10b981' } },
-                              { value: 2800, name: 'Sanitary Ware', itemStyle: { color: '#f59e0b' } }
+                              { value: 4500, name: '日用瓷 (Fine Porcelain)', itemStyle: { color: '#6366f1' } },
+                              { value: 3200, name: '艺术陶瓷 (Artistic Ceramic)', itemStyle: { color: '#06b6d4' } },
+                              { value: 8500, name: '建筑陶瓷 (Architectural Tile)', itemStyle: { color: '#10b981' } },
+                              { value: 2800, name: '卫浴陶瓷 (Sanitary Ware)', itemStyle: { color: '#f59e0b' } }
                             ]
                           }]
                         }} 
@@ -1076,10 +1083,10 @@ function App() {
                   value={currentRecord.productName}
                   onChange={(e) => setCurrentRecord({...currentRecord, productName: e.target.value})}
                 >
-                  <option value="Fine Porcelain">Fine Porcelain</option>
-                  <option value="Artistic Ceramic">Artistic Ceramic</option>
-                  <option value="Architectural Tile">Architectural Tile</option>
-                  <option value="Sanitary Ware">Sanitary Ware</option>
+                  <option value="Fine Porcelain">日用瓷 (Fine Porcelain)</option>
+                  <option value="Artistic Ceramic">艺术陶瓷 (Artistic Ceramic)</option>
+                  <option value="Architectural Tile">建筑陶瓷 (Architectural Tile)</option>
+                  <option value="Sanitary Ware">卫浴陶瓷 (Sanitary Ware)</option>
                 </select>
               </div>
 
@@ -1146,10 +1153,10 @@ function App() {
                   value={currentRecord.productName}
                   onChange={(e) => setCurrentRecord({...currentRecord, productName: e.target.value})}
                 >
-                  <option value="Fine Porcelain">Fine Porcelain</option>
-                  <option value="Artistic Ceramic">Artistic Ceramic</option>
-                  <option value="Architectural Tile">Architectural Tile</option>
-                  <option value="Sanitary Ware">Sanitary Ware</option>
+                  <option value="Fine Porcelain">日用瓷 (Fine Porcelain)</option>
+                  <option value="Artistic Ceramic">艺术陶瓷 (Artistic Ceramic)</option>
+                  <option value="Architectural Tile">建筑陶瓷 (Architectural Tile)</option>
+                  <option value="Sanitary Ware">卫浴陶瓷 (Sanitary Ware)</option>
                 </select>
               </div>
 

@@ -319,7 +319,7 @@ function App() {
       yAxis: [
         {
           type: 'value',
-          name: 'Output (Pieces)',
+          name: '产量 (件)',
           nameTextStyle: { color: '#94a3b8' },
           axisLabel: { color: '#94a3b8' },
           splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
@@ -412,7 +412,7 @@ function App() {
         },
         {
           type: 'value',
-          name: 'Output (Pieces)',
+          name: '产量 (件)',
           axisLabel: { color: '#94a3b8' },
           splitLine: { show: false }
         }
@@ -454,7 +454,7 @@ function App() {
       },
       yAxis: {
         type: 'value',
-        name: 'Projected Pieces',
+        name: '预测产量 (件)',
         nameTextStyle: { color: '#94a3b8' },
         axisLabel: { color: '#94a3b8' },
         splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
@@ -545,16 +545,14 @@ function App() {
           </div>
 
           <div className="system-status">
-            <div className="status-badge">
-              <span className={`status-dot ${dbConnected ? 'active' : ''} ${dbConnected ? '' : 'badge-orange'}`} 
-                    style={{ backgroundColor: dbConnected ? '#10b981' : '#f59e0b' }} />
-              <span>数据库: {dbConnected ? '已连接' : '演示模式'}</span>
+            <div className="status-badge" style={{ gap: '8px' }}>
+              <span className="status-dot" style={{ backgroundColor: '#6366f1', boxShadow: '0 0 8px rgba(99, 102, 241, 0.5)' }} />
+              <span>今日产量: <strong style={{ color: 'var(--primary)' }}>{records[0] ? records[0].outputQuantity : 1450} 件</strong></span>
             </div>
             
-            <div className="status-badge">
-              <span className={`status-dot ${aiConnected ? 'active' : ''} ${aiConnected ? '' : 'badge-red'}`} 
-                    style={{ backgroundColor: aiConnected ? '#10b981' : '#ef4444' }} />
-              <span>AI服务: {aiConnected ? '在线' : '离线'}</span>
+            <div className="status-badge" style={{ gap: '8px' }}>
+              <span className="status-dot" style={{ backgroundColor: '#059669', boxShadow: '0 0 8px rgba(5, 150, 105, 0.5)' }} />
+              <span>合格率: <strong style={{ color: 'var(--success)' }}>{records[0] ? records[0].qualifiedRate : 98.15}%</strong></span>
             </div>
 
             <button className="btn-glass" onClick={checkConnectionsAndFetch} style={{ padding: '6px 12px', fontSize: '13px' }}>
@@ -1019,7 +1017,7 @@ function App() {
                         <thead>
                           <tr>
                             <th>Estimated Future Date</th>
-                            <th>Projected Output (pieces)</th>
+                            <th>预测产量 (件)</th>
                             <th>Reliability Factor</th>
                             <th>Scheduling Suggestion</th>
                           </tr>
@@ -1086,7 +1084,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>Daily Output Quantity (Pieces)</label>
+                <label>日产量 (件)</label>
                 <input 
                   type="number"
                   min="0"
@@ -1098,7 +1096,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>Defect Quantity (Pieces)</label>
+                <label>缺陷数量 (件)</label>
                 <input 
                   type="number"
                   min="0"
@@ -1156,7 +1154,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>Daily Output Quantity (Pieces)</label>
+                <label>日产量 (件)</label>
                 <input 
                   type="number"
                   min="0"
@@ -1168,7 +1166,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>Defect Quantity (Pieces)</label>
+                <label>缺陷数量 (件)</label>
                 <input 
                   type="number"
                   min="0"

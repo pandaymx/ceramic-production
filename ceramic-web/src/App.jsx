@@ -256,11 +256,15 @@ function App() {
         // Build mock dates and forecast values based on days parameter
         const dates = [];
         const values = [];
+        const seasons = [];
         const baseDate = new Date();
         for (let i = 0; i < forecastDays; i++) {
           const d = new Date(baseDate);
           d.setDate(baseDate.getDate() + i + 1);
           dates.push(d.toISOString().split('T')[0]);
+          const month = d.getMonth() + 1; // 1-indexed
+          const isPeak = [3, 4, 5, 9, 10, 11].includes(month);
+          seasons.push(isPeak ? '旺季' : '淡季');
           // SVM 模型模拟：趋势更平滑，噪声更小
           if (forecastModel === 'svm') {
             values.push(parseFloat((1640 + i * 12 + Math.sin(i * 0.8) * 60 + Math.random() * 40).toFixed(2)));
@@ -274,6 +278,7 @@ function App() {
         setForecastResult({
           forecastDates: dates,
           forecastValues: values,
+          forecastSeasons: seasons,
           metrics: mockMetrics
         });
         setBacktestData({
@@ -307,16 +312,21 @@ function App() {
       // Fallback predictor inside AI view
       const dates = [];
       const values = [];
+      const seasons = [];
       const baseDate = new Date();
       for (let i = 0; i < forecastDays; i++) {
         const d = new Date(baseDate);
         d.setDate(baseDate.getDate() + i + 1);
         dates.push(d.toISOString().split('T')[0]);
+        const month = d.getMonth() + 1; // 1-indexed
+        const isPeak = [3, 4, 5, 9, 10, 11].includes(month);
+        seasons.push(isPeak ? '旺季' : '淡季');
         values.push(parseFloat((1600 + Math.sin(i) * 150 + Math.random() * 80).toFixed(2)));
       }
       setForecastResult({
         forecastDates: dates,
         forecastValues: values,
+        forecastSeasons: seasons,
         metrics: mockForecast.metrics
       });
       setBacktestData({
@@ -1083,6 +1093,27 @@ function App() {
                       </select>
                     </div>
 
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '12px 0' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={useSeasonal} 
+                          onChange={(e) => setUseSeasonal(e.target.checked)}
+                          style={{ accentColor: 'var(--primary)' }}
+                        />
+                        启用旺淡季特征因子调整
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={includeBacktest} 
+                          onChange={(e) => setIncludeBacktest(e.target.checked)}
+                          style={{ accentColor: 'var(--primary)' }}
+                        />
+                        启用历史对比回测分析
+                      </label>
+                    </div>
+
                     <button 
                       className="btn-glass"
                       style={{ 
@@ -1106,6 +1137,14 @@ function App() {
                         <div className="forecast-metric-row">
                           <span>均方根误差 (RMSE):</span>
                           <span>{forecastResult.metrics.rmse} 件</span>
+                        </div>
+                        <div className="forecast-metric-row" style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                          <span>误差控制评估 (&lt; 150):</span>
+                          {forecastResult.metrics.rmse <= 150 ? (
+                            <span className="status-badge badge-green" style={{ fontSize: '11px' }}>✅ 已达标</span>
+                          ) : (
+                            <span className="status-badge badge-red" style={{ fontSize: '11px' }}>⚠️ 未达标</span>
+                          )}
                         </div>
                         <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px', lineHeight: 1.4 }}>
                           * MAPE计算与历史验证数据对比的平均绝对百分比误差。数值越低表示预测越精准。

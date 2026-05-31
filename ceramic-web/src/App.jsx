@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+
+// Set backend API base URL to ensure direct connection to Java backend in Docker/Production
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 import * as echarts from 'echarts';
 import ReactECharts from 'echarts-for-react';
 import { 
@@ -314,9 +317,10 @@ function App() {
       },
       legend: {
         data: ['日产量', '合格率 %'],
-        textStyle: { color: '#94a3b8' }
+        textStyle: { color: '#94a3b8' },
+        top: '0%'
       },
-      grid: { left: '3%', right: '3%', bottom: '3%', containLabel: true },
+      grid: { left: '3%', right: '3%', bottom: '12%', top: '18%', containLabel: true },
       xAxis: {
         type: 'category',
         data: sorted.map(r => r.productionDate),
@@ -403,7 +407,12 @@ function App() {
     return {
       backgroundColor: 'transparent',
       tooltip: { trigger: 'axis', axisPointer: { type: 'line' } },
-      grid: { left: '3%', right: '3%', bottom: '3%', containLabel: true },
+      legend: {
+        data: ['能耗足迹', '总产量'],
+        textStyle: { color: '#94a3b8' },
+        top: '0%'
+      },
+      grid: { left: '3%', right: '3%', bottom: '12%', top: '18%', containLabel: true },
       xAxis: {
         type: 'category',
         data: sorted.map(r => r.productionDate),
@@ -451,8 +460,8 @@ function App() {
     return {
       backgroundColor: 'transparent',
       tooltip: { trigger: 'axis' },
-      legend: { data: ['Projected Yield'], textStyle: { color: '#94a3b8' } },
-      grid: { left: '3%', right: '3%', bottom: '3%', containLabel: true },
+      legend: { data: ['预测产量'], textStyle: { color: '#94a3b8' }, top: '0%' },
+      grid: { left: '3%', right: '3%', bottom: '12%', top: '18%', containLabel: true },
       xAxis: {
         type: 'category',
         data: forecastResult.forecastDates,
@@ -468,7 +477,7 @@ function App() {
       },
       series: [
         {
-          name: 'Projected Yield',
+          name: '预测产量',
           type: 'line',
           smooth: true,
           symbolSize: 8,
@@ -854,58 +863,58 @@ function App() {
                 <div className="metrics-grid">
                   <div className="metric-card glass-panel" style={{ '--card-glow': '#10b981' }}>
                     <div className="metric-header">
-                      <span>Monthly Quality Grade</span>
+                      <span>月度质量等级</span>
                       <div className="metric-icon-wrapper" style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)' }}><TrendingUp size={18} /></div>
                     </div>
                     <div className="metric-value">96.88%</div>
-                    <div className="metric-footer">Excellent grade (ISO-9001 certified)</div>
+                    <div className="metric-footer">优秀等级 (已通过 ISO-9001 认证)</div>
                   </div>
 
                   <div className="metric-card glass-panel" style={{ '--card-glow': '#06b6d4' }}>
                     <div className="metric-header">
-                      <span>Scrap Degradation Cost</span>
+                      <span>废品降级损耗</span>
                       <div className="metric-icon-wrapper" style={{ color: '#06b6d4', background: 'rgba(6,182,212,0.1)' }}><AlertTriangle size={18} /></div>
                     </div>
-                    <div className="metric-value">-$450 <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>est</span></div>
-                    <div className="metric-footer"><span className="trend-down">↓ 18%</span> optimization savings index</div>
+                    <div className="metric-value">-$450 <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>估算</span></div>
+                    <div className="metric-footer"><span className="trend-down">↓ 18%</span> 优化节省指数</div>
                   </div>
 
                   <div className="metric-card glass-panel" style={{ '--card-glow': '#6366f1' }}>
                     <div className="metric-header">
-                      <span>Average Unit Energy</span>
+                      <span>单位平均能耗</span>
                       <div className="metric-icon-wrapper"><Zap size={18} /></div>
                     </div>
-                    <div className="metric-value">0.27 <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>kWh/pc</span></div>
-                    <div className="metric-footer">Standard coal equivalent level A</div>
+                    <div className="metric-value">0.27 <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>度/件</span></div>
+                    <div className="metric-footer">标准煤当量 A 级水平</div>
                   </div>
 
                   <div className="metric-card glass-panel" style={{ '--card-glow': '#f59e0b' }}>
                     <div className="metric-header">
-                      <span>Export Reports</span>
+                      <span>导出生产报表</span>
                       <div className="metric-icon-wrapper" style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.1)' }}><FileText size={18} /></div>
                     </div>
                     <div className="metric-value" style={{ fontSize: '16px', display: 'flex', gap: '8px', marginTop: '16px' }}>
                       <button className="btn-glass" onClick={() => handleExportReport('xlsx')} style={{ padding: '4px 8px', fontSize: '11px' }}>Excel</button>
                       <button className="btn-glass" onClick={() => handleExportReport('pdf')} style={{ padding: '4px 8px', fontSize: '11px' }}>PDF</button>
                     </div>
-                    <div className="metric-footer">Export batch ledger reports</div>
+                    <div className="metric-footer">导出批量分类账生产报表</div>
                   </div>
                 </div>
 
                 <div className="charts-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
                   <div className="chart-card glass-panel">
-                    <h3><Zap size={16} style={{ color: '#ef4444' }} /> Total Production Yield vs Energy Consumption Trace</h3>
+                    <h3><Zap size={16} style={{ color: '#ef4444' }} /> 总产量与能耗追踪关联图</h3>
                     <div className="chart-wrapper">
                       {records.length > 0 ? (
                         <ReactECharts option={getEnergyCorrelationOption()} style={{ height: '100%' }} />
                       ) : (
-                        <div style={{ textAlign: 'center', paddingTop: '100px', color: 'var(--text-muted)' }}>Sync records to populate analytics.</div>
+                        <div style={{ textAlign: 'center', paddingTop: '100px', color: 'var(--text-muted)' }}>同步数据记录以加载分析图表。</div>
                       )}
                     </div>
                   </div>
 
                   <div className="chart-card glass-panel">
-                    <h3><Layers size={16} style={{ color: '#06b6d4' }} /> Ceramic Output Contribution Share</h3>
+                    <h3><Layers size={16} style={{ color: '#06b6d4' }} /> 陶瓷产品产量贡献占比饼图</h3>
                     <div className="chart-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {/* Sub-component pie representation */}
                       <ReactECharts 

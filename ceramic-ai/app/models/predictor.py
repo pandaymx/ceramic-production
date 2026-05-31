@@ -34,6 +34,8 @@ class CeramicPredictor:
         返回按季节分组的对比数据
         """
         if len(df) < test_days + 5:
+            test_days = max(1, len(df) - 5)
+        if len(df) < 6:
             return None
             
         try:

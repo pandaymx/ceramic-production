@@ -58,6 +58,9 @@ function App() {
   const [forecastDays, setForecastDays] = useState(7);
   const [forecastModel, setForecastModel] = useState('arima');
   const [forecastResult, setForecastResult] = useState(null);
+  const [useSeasonal, setUseSeasonal] = useState(true);
+  const [includeBacktest, setIncludeBacktest] = useState(true);
+  const [backtestData, setBacktestData] = useState(null);
   
   // CRUD Modals
   const [showAddModal, setShowAddModal] = useState(false);
@@ -280,10 +283,11 @@ function App() {
 
     try {
       const res = await axios.get('/api/forecast/predict', {
-        params: { days: forecastDays, model: forecastModel }
+        params: { days: forecastDays, model: forecastModel, use_seasonal: useSeasonal, include_backtest: includeBacktest }
       });
       if (res.data && res.data.code === 200) {
         setForecastResult(res.data.data);
+        setBacktestData(res.data.data.backtestData || null);
       } else {
         alert('Error: ' + res.data.msg);
       }
@@ -498,6 +502,77 @@ function App() {
             ])
           },
           data: forecastResult.forecastValues
+        }
+      ]
+    };
+  };
+
+  const getComparisonOption = () => {
+    if (!backtestData || !backtestData.comparison) return {};
+
+    const comparison = backtestData.comparison;
+    return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' }
+      },
+      legend: {
+        data: ['实际产量', '预测产量', '误差'],
+        textStyle: { color: '#64748b' }
+      },
+      grid: { left: '3%', right: '3%', bottom: '10%', containLabel: true },
+      xAxis: {
+        type: 'category',
+        data: comparison.map(d => d.date),
+        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.1)' } },
+        axisLabel: { color: '#64748b', rotate: 15 }
+      },
+      yAxis: [
+        {
+          type: 'value',
+          name: '产量 (件)',
+          nameTextStyle: { color: '#64748b' },
+          axisLabel: { color: '#64748b' },
+          splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+        },
+        {
+          type: 'value',
+          name: '误差',
+          nameTextStyle: { color: '#64748b' },
+          axisLabel: { color: '#64748b' },
+          splitLine: { show: false }
+        }
+      ],
+      series: [
+        {
+          name: '实际产量',
+          type: 'bar',
+          barWidth: '25%',
+          itemStyle: { color: '#6366f1' },
+          data: comparison.map(d => d.actual)
+        },
+        {
+          name: '预测产量',
+          type: 'bar',
+          barWidth: '25%',
+          itemStyle: { color: '#06b6d4' },
+          data: comparison.map(d => d.predicted)
+        },
+        {
+          name: '误差',
+          type: 'line',
+          yAxisIndex: 1,
+          smooth: true,
+          symbolSize: 10,
+          itemStyle: { color: '#ef4444' },
+          lineStyle: { width: 3 },
+          data: comparison.map(d => d.error),
+          markLine: {
+            data: [{ yAxis: 150, name: '误差控制线 (150)' }],
+            lineStyle: { color: '#f59e0b', type: 'dashed', width: 2 },
+            label: { formatter: '控制线 150', position: 'end' }
+          }
         }
       ]
     };
@@ -1033,6 +1108,16 @@ function App() {
                   </div>
                 </div>
 
+                {/* Comparison Chart */}
+                {backtestData && (
+                  <div className="chart-card glass-panel fade-in" style={{ minHeight: '400px' }}>
+                    <h3><BarChart3 size={16} style={{ color: 'var(--primary)' }} /> 历史测试集对比分析</h3>
+                    <div className="chart-wrapper">
+                      <ReactECharts option={getComparisonOption()} style={{ height: '100%' }} />
+                    </div>
+                  </div>
+                )}
+
                 {/* Predicted Data Table list */}
                 {forecastResult && (
                   <div className="glass-panel fade-in" style={{ padding: '24px' }}>
@@ -1041,24 +1126,32 @@ function App() {
                       <table className="data-table">
                         <thead>
                           <tr>
-                            <th>Estimated Future Date</th>
+                            <th>预测日期</th>
+                            <th>季节</th>
                             <th>预测产量 (件)</th>
-                            <th>Reliability Factor</th>
-                            <th>Scheduling Suggestion</th>
+                            <th>可信度</th>
+                            <th>调度建议</th>
                           </tr>
                         </thead>
                         <tbody>
                           {forecastResult.forecastDates.map((date, idx) => (
                             <tr key={idx}>
                               <td><strong>{date}</strong></td>
-                              <td><span style={{ color: '#06b6d4', fontWeight: 600 }}>{Math.round(forecastResult.forecastValues[idx])} pcs</span></td>
                               <td>
-                                <span className="status-badge badge-green">High Confidence (96%)</span>
+                                <span className={`status-badge ${forecastResult.forecastSeasons?.[idx] === '旺季' ? 'badge-orange' : 'badge-blue'}`}>
+                                  {forecastResult.forecastSeasons?.[idx] || '未知'}
+                                </span>
                               </td>
+                              <td><span style={{ color: '#06b6d4', fontWeight: 600 }}>{Math.round(forecastResult.forecastValues[idx])} 件</span></td>
                               <td>
-                                {forecastResult.forecastValues[idx] > 1750 
-                                  ? '⚠️ High load kiln schedule. Optimize secondary energy reserves.' 
-                                  : '✅ Normal load batch scheduling.'}
+                                {forecastResult.forecastValues[idx] > 1800
+                                  ? <span className="status-badge badge-orange">高负荷</span>
+                                  : <span className="status-badge badge-green">正常</span>}
+                              </td>
+                              <td style={{ fontSize: '12px' }}>
+                                {forecastResult.forecastValues[idx] > 1750
+                                  ? '⚠️ 高负荷排产，优化能源储备'
+                                  : '✅ 正常批次排产'}
                               </td>
                             </tr>
                           ))}

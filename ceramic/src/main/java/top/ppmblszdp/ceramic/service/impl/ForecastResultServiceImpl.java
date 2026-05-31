@@ -22,12 +22,16 @@ public class ForecastResultServiceImpl extends ServiceImpl<ForecastResultMapper,
     @Value("${ai-service.predict-path:/api/forecast/predict}")
     private String predictPath;
 
+    @Value("${ai-service.comparison-path:/api/forecast/comparison}")
+    private String comparisonPath;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
     @SuppressWarnings("unchecked")
-    public Map<String, Object> getForecastPrediction(int days, String model) {
-        String url = baseUrl + predictPath + "?days=" + days + "&model=" + model;
+    public Map<String, Object> getForecastPrediction(int days, String model, boolean useSeasonal, boolean includeBacktest) {
+        String url = baseUrl + predictPath + "?days=" + days + "&model=" + model
+                    + "&use_seasonal=" + useSeasonal + "&include_backtest=" + includeBacktest;
         try {
             // Attempt to call the Python FastAPI AI predictor
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
@@ -46,6 +50,21 @@ public class ForecastResultServiceImpl extends ServiceImpl<ForecastResultMapper,
         return generateFallbackForecast(days);
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getBacktestComparison(int testDays) {
+        String url = baseUrl + comparisonPath + "?test_days=" + testDays;
+        try {
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            if (response != null && response.containsKey("data")) {
+                return (Map<String, Object>) response.get("data");
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to get comparison data: " + e.getMessage());
+        }
+        return null;
+    }
+
     private Map<String, Object> generateFallbackForecast(int days) {
         List<String> dates = new ArrayList<>();
         List<BigDecimal> values = new ArrayList<>();
@@ -61,7 +80,7 @@ public class ForecastResultServiceImpl extends ServiceImpl<ForecastResultMapper,
             double wave = Math.sin(i * 0.5) * 150;
             double noise = random.nextDouble() * 80;
             double value = 1600 + wave + noise;
-            
+
             BigDecimal bd = BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP);
             values.add(bd);
 

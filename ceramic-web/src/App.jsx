@@ -276,6 +276,17 @@ function App() {
           forecastValues: values,
           metrics: mockMetrics
         });
+        setBacktestData({
+          comparison: [
+            { date: '05-13', actual: 1610, predicted: 1580, error: 30 },
+            { date: '05-14', actual: 1180, predicted: 1210, error: 30 },
+            { date: '05-15', actual: 2900, predicted: 2850, error: 50 },
+            { date: '05-16', actual: 980, predicted: 950, error: 30 },
+            { date: '05-17', actual: 1500, predicted: 1520, error: 20 },
+            { date: '05-18', actual: 1250, predicted: 1210, error: 40 },
+            { date: '05-19', actual: 2780, predicted: 2810, error: 30 }
+          ]
+        });
         setLoading(false);
       }, 1500);
       return;
@@ -307,6 +318,17 @@ function App() {
         forecastDates: dates,
         forecastValues: values,
         metrics: mockForecast.metrics
+      });
+      setBacktestData({
+        comparison: [
+          { date: '05-13', actual: 1610, predicted: 1580, error: 30 },
+          { date: '05-14', actual: 1180, predicted: 1210, error: 30 },
+          { date: '05-15', actual: 2900, predicted: 2850, error: 50 },
+          { date: '05-16', actual: 980, predicted: 950, error: 30 },
+          { date: '05-17', actual: 1500, predicted: 1520, error: 20 },
+          { date: '05-18', actual: 1250, predicted: 1210, error: 40 },
+          { date: '05-19', actual: 2780, predicted: 2810, error: 30 }
+        ]
       });
     }
     setLoading(false);
@@ -1032,24 +1054,24 @@ function App() {
                   <div className="forecast-controls glass-panel">
                     <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
                       <Cpu size={18} style={{ color: 'var(--primary)', marginRight: '8px' }} />
-                      Predictor Controls
+                      预测参数控制
                     </h3>
 
                     <div className="filter-group">
-                      <label>Forecasting Horizon (预测天数)</label>
+                      <label>预测时间跨度 (天数)</label>
                       <select 
                         className="select-glass"
                         value={forecastDays}
                         onChange={(e) => setForecastDays(parseInt(e.target.value))}
                       >
-                        <option value={7}>Next 7 Days</option>
-                        <option value={14}>Next 14 Days</option>
-                        <option value={30}>Next 30 Days</option>
+                        <option value={7}>未来 7 天</option>
+                        <option value={14}>未来 14 天</option>
+                        <option value={30}>未来 30 天</option>
                       </select>
                     </div>
 
                     <div className="filter-group">
-                      <label>Select Time-series Model</label>
+                      <label>选择时序预测模型</label>
                       <select 
                         className="select-glass"
                         value={forecastModel}
@@ -1071,22 +1093,22 @@ function App() {
                       }}
                       onClick={handleRunForecast}
                     >
-                      <TrendingUp size={16} /> Run Forecasting Model
+                      <TrendingUp size={16} /> 运行预测模型
                     </button>
 
                     {forecastResult && (
                       <div className="forecast-metrics">
-                        <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Engine Accuracy Statistics</h4>
+                        <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>模型精度指标统计</h4>
                         <div className="forecast-metric-row">
-                          <span>Mean Abs Error (MAPE):</span>
+                          <span>平均绝对百分比误差 (MAPE):</span>
                           <span>{forecastResult.metrics.mape}%</span>
                         </div>
                         <div className="forecast-metric-row">
-                          <span>Root Mean Square (RMSE):</span>
-                          <span>{forecastResult.metrics.rmse} pcs</span>
+                          <span>均方根误差 (RMSE):</span>
+                          <span>{forecastResult.metrics.rmse} 件</span>
                         </div>
                         <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px', lineHeight: 1.4 }}>
-                          * MAPE calculates average absolute percentage error compared to verified backtesting metrics. Lower is highly optimal.
+                          * MAPE计算与历史验证数据对比的平均绝对百分比误差。数值越低表示预测越精准。
                         </p>
                       </div>
                     )}
@@ -1094,14 +1116,14 @@ function App() {
 
                   {/* Right Chart Visualization */}
                   <div className="chart-card glass-panel" style={{ minHeight: '400px' }}>
-                    <h3><TrendingUp size={16} style={{ color: 'var(--secondary)' }} /> Projected Production Yield Curve</h3>
+                    <h3><TrendingUp size={16} style={{ color: 'var(--secondary)' }} /> 预测产量走势曲线</h3>
                     <div className="chart-wrapper">
                       {forecastResult ? (
                         <ReactECharts option={getForecastOption()} style={{ height: '100%' }} />
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)' }}>
                           <Cpu size={40} className="text-secondary" style={{ marginBottom: '16px', opacity: 0.3 }} />
-                          <p>Select mathematical configuration and trigger "Run Forecasting Model" to evaluate projections.</p>
+                          <p>选择算法配置并点击“运行预测模型”来生成并评估预测曲线。</p>
                         </div>
                       )}
                     </div>
@@ -1121,7 +1143,7 @@ function App() {
                 {/* Predicted Data Table list */}
                 {forecastResult && (
                   <div className="glass-panel fade-in" style={{ padding: '24px' }}>
-                    <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>Projected Daily Breakdown Schedule</h3>
+                    <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>预测每日排产明细表</h3>
                     <div className="data-table-container">
                       <table className="data-table">
                         <thead>
@@ -1171,13 +1193,13 @@ function App() {
         <div className="modal-overlay">
           <div className="modal-content glass-panel fade-in">
             <div className="modal-header">
-              <h3>Insert Production batch Record</h3>
+              <h3>新增生产批次记录</h3>
               <button className="modal-close" onClick={() => setShowAddModal(false)}><X size={20} /></button>
             </div>
             
             <form className="modal-form" onSubmit={handleSaveRecord}>
               <div className="form-group">
-                <label>Production Date</label>
+                <label>生产日期</label>
                 <input 
                   type="date"
                   className="input-glass"
@@ -1188,7 +1210,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>Product Category</label>
+                <label>产品类别</label>
                 <select 
                   className="select-glass"
                   value={currentRecord.productName}
@@ -1226,7 +1248,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>Energy Footprint Index (kWh)</label>
+                <label>能耗指数 (kWh)</label>
                 <input 
                   type="number"
                   step="0.01"
@@ -1258,7 +1280,7 @@ function App() {
             
             <form className="modal-form" onSubmit={handleSaveRecord}>
               <div className="form-group">
-                <label>Product Category</label>
+                <label>产品类别</label>
                 <select 
                   className="select-glass"
                   value={currentRecord.productName}
@@ -1296,7 +1318,7 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label>Energy Footprint Index (kWh)</label>
+                <label>能耗指数 (kWh)</label>
                 <input 
                   type="number"
                   step="0.01"
@@ -1309,8 +1331,8 @@ function App() {
               </div>
 
               <div className="modal-actions">
-                <button type="button" className="btn-glass" onClick={() => setShowEditModal(false)}>Cancel</button>
-                <button type="submit" className="btn-glass" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>Apply Changes</button>
+                <button type="button" className="btn-glass" onClick={() => setShowEditModal(false)}>取消</button>
+                <button type="submit" className="btn-glass" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>保存修改</button>
               </div>
             </form>
           </div>

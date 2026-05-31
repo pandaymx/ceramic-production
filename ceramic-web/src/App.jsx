@@ -61,23 +61,7 @@ function App() {
     energyConsumption: 0.0
   });
 
-  // Animated Kiln Temperature State
-  const [kilnTemp, setKilnTemp] = useState(1245);
-  const [kilnStatus, setKilnStatus] = useState('Firing');
 
-  // Simulated continuous temperature updates for the high-tech cockpit
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setKilnTemp(prev => {
-        const change = (Math.random() - 0.5) * 4;
-        const next = prev + change;
-        if (next > 1300) return 1290;
-        if (next < 1200) return 1210;
-        return parseFloat(next.toFixed(1));
-      });
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Baseline mock data for beautiful demo fallback
   const mockRecords = [
@@ -648,37 +632,7 @@ function App() {
                   </div>
                 </div>
 
-                {/* Animated Kiln & telemetry chamber */}
-                <div className="kiln-simulation-card glass-panel">
-                  <div className="kiln-status-header">
-                    <div style={{ display: 'flex', alignPosition: 'center', gap: '8px' }}>
-                      <Flame size={18} style={{ color: '#f59e0b' }} />
-                      <h4 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600 }}>Active Tunnel Kiln Chamber Telemetry (窑炉实况监控)</h4>
-                    </div>
-                    <div style={{ display: 'flex', gap: '20px', fontSize: '13px' }}>
-                      <span>Gas Pressure: <strong style={{ color: '#10b981' }}>2.8 kPa</strong></span>
-                      <span>O2 Concentration: <strong style={{ color: '#6366f1' }}>4.2%</strong></span>
-                      <span>Speed: <strong style={{ color: '#06b6d4' }}>0.45 m/min</strong></span>
-                    </div>
-                  </div>
-                  
-                  <div className="kiln-graphics">
-                    <div className="kiln-laser-line"></div>
-                    <div className="kiln-chamber firing">
-                      <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>Preheating</span>
-                      <strong className="kiln-temp-val">780°C</strong>
-                    </div>
-                    <div className="kiln-chamber firing">
-                      <div className="kiln-chamber-flame"></div>
-                      <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>Firing Zone</span>
-                      <strong className="kiln-temp-val" style={{ fontSize: '16px' }}>{kilnTemp}°C</strong>
-                    </div>
-                    <div className="kiln-chamber">
-                      <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>Cooling Zone</span>
-                      <strong className="kiln-temp-val" style={{ color: '#06b6d4', textShadow: '0 0 5px rgba(6,182,212,0.3)' }}>140°C</strong>
-                    </div>
-                  </div>
-                </div>
+
 
                 {/* Cockpit Charts */}
                 <div className="charts-grid">

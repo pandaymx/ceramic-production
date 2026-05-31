@@ -258,12 +258,20 @@ function App() {
           const d = new Date(baseDate);
           d.setDate(baseDate.getDate() + i + 1);
           dates.push(d.toISOString().split('T')[0]);
-          values.push(parseFloat((1600 + Math.sin(i) * 150 + Math.random() * 80).toFixed(2)));
+          // SVM 模型模拟：趋势更平滑，噪声更小
+          if (forecastModel === 'svm') {
+            values.push(parseFloat((1640 + i * 12 + Math.sin(i * 0.8) * 60 + Math.random() * 40).toFixed(2)));
+          } else {
+            values.push(parseFloat((1600 + Math.sin(i) * 150 + Math.random() * 80).toFixed(2)));
+          }
         }
+        const mockMetrics = forecastModel === 'svm'
+          ? { mape: 4.12, rmse: 44.28 }
+          : mockForecast.metrics;
         setForecastResult({
           forecastDates: dates,
           forecastValues: values,
-          metrics: mockForecast.metrics
+          metrics: mockMetrics
         });
         setLoading(false);
       }, 1500);
@@ -974,6 +982,7 @@ function App() {
                       >
                         <option value="arima">ARIMA (统计学自回归模型)</option>
                         <option value="lstm">LSTM (长短期记忆神经网络)</option>
+                        <option value="svm">SVM (支持向量回归 SVR-RBF)</option>
                       </select>
                     </div>
 

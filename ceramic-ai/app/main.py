@@ -57,6 +57,9 @@ def predict(
     if model.lower() == "lstm":
         forecast_values, mape, rmse = CeramicPredictor.predict_lstm(df, days, use_seasonal)
         model_label = "LSTM Neural Net"
+    elif model.lower() == "svm":
+        forecast_values, mape, rmse = CeramicPredictor.predict_svm(df, days, use_seasonal)
+        model_label = "SVM (SVR-RBF)"
     else:
         forecast_values, mape, rmse = CeramicPredictor.predict_arima(df, days, use_seasonal)
         model_label = "ARIMA Model"
@@ -161,4 +164,4 @@ def get_comparison(
 
 @app.get("/health")
 def health():
-    return {"status": "healthy", "engine": "Ceramic AI Core V1.1", "features": ["seasonal_prediction", "backtest_comparison"]}
+    return {"status": "healthy", "engine": "Ceramic AI Core V1.2", "features": ["seasonal_prediction", "backtest_comparison", "svm_svr"]}

@@ -88,7 +88,7 @@ def predict(
     # 5. Generate backtest comparison data if requested
     backtest_data = None
     if include_backtest:
-        backtest_data = CeramicPredictor.backtest_comparison(df, test_days=days)
+        backtest_data = CeramicPredictor.backtest_comparison(df, test_days=days, model=model, use_seasonal=use_seasonal)
         
         # Add season labels to backtest comparison
         if backtest_data and 'comparison' in backtest_data:
@@ -125,7 +125,9 @@ def predict(
 
 @app.get("/api/forecast/comparison")
 def get_comparison(
-    test_days: int = Query(10, description="Number of recent days to use as test set")
+    test_days: int = Query(10, description="Number of recent days to use as test set"),
+    model: str = Query("arima", description="Forecasting model to run: 'arima', 'lstm', or 'svm'"),
+    use_seasonal: bool = Query(True, description="Enable seasonal adjustment for peak/off seasons")
 ):
     """Get historical comparison between actual and predicted values with seasonal analysis"""
     df = fetch_historical_data()
@@ -136,7 +138,7 @@ def get_comparison(
             "msg": "Insufficient historical data for comparison"
         }
     
-    backtest_data = CeramicPredictor.backtest_comparison(df, test_days=test_days)
+    backtest_data = CeramicPredictor.backtest_comparison(df, test_days=test_days, model=model, use_seasonal=use_seasonal)
     
     if backtest_data is None:
         return {

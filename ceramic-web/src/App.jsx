@@ -61,6 +61,7 @@ function App() {
   const [useSeasonal, setUseSeasonal] = useState(true);
   const [includeBacktest, setIncludeBacktest] = useState(true);
   const [backtestData, setBacktestData] = useState(null);
+  const [compareAllModels, setCompareAllModels] = useState(false);
   
   // CRUD Modals
   const [showAddModal, setShowAddModal] = useState(false);
@@ -248,14 +249,14 @@ function App() {
   };
 
   // Fetch forecast prediction
+  // Fetch forecast prediction
   const handleRunForecast = async () => {
     setLoading(true);
+    
     if (isDemoMode) {
       // Simulate network delay for that premium high-tech feel
       setTimeout(() => {
-        // Build mock dates and forecast values based on days parameter
         const dates = [];
-        const values = [];
         const seasons = [];
         const baseDate = new Date();
         for (let i = 0; i < forecastDays; i++) {
@@ -265,69 +266,158 @@ function App() {
           const month = d.getMonth() + 1; // 1-indexed
           const isPeak = [3, 4, 5, 9, 10, 11].includes(month);
           seasons.push(isPeak ? '旺季' : '淡季');
-          // SVM 模型模拟：趋势更平滑，噪声更小
-          if (forecastModel === 'svm') {
-            values.push(parseFloat((1640 + i * 12 + Math.sin(i * 0.8) * 60 + Math.random() * 40).toFixed(2)));
-          } else {
-            values.push(parseFloat((1600 + Math.sin(i) * 150 + Math.random() * 80).toFixed(2)));
-          }
         }
-        const mockMetrics = forecastModel === 'svm'
-          ? { mape: 4.12, rmse: 44.28 }
-          : mockForecast.metrics;
-        setForecastResult({
-          forecastDates: dates,
-          forecastValues: values,
-          forecastSeasons: seasons,
-          metrics: mockMetrics
-        });
 
-        // Dynamically build mock backtest comparison data matching forecastDays
-        const mockComparisonList = [];
-        const testBaseDate = new Date();
-        for (let i = forecastDays; i > 0; i--) {
-          const d = new Date(testBaseDate);
-          d.setDate(testBaseDate.getDate() - i);
-          const dateStr = d.toISOString().split('T')[0].substring(5); // e.g. "05-13"
-          let actualVal, predVal;
-          if (forecastModel === 'svm') {
-            actualVal = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50 + Math.random() * 30);
-            predVal = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50);
-          } else {
-            actualVal = Math.round(1600 + Math.sin(i) * 120 + Math.random() * 50);
-            predVal = Math.round(1600 + Math.sin(i) * 120);
+        if (compareAllModels) {
+          const arimaValues = [];
+          const lstmValues = [];
+          const svmValues = [];
+          for (let i = 0; i < forecastDays; i++) {
+            arimaValues.push(parseFloat((1600 + Math.sin(i) * 150 + Math.random() * 80).toFixed(2)));
+            lstmValues.push(parseFloat((1620 + Math.cos(i * 0.7) * 120 + Math.random() * 50).toFixed(2)));
+            svmValues.push(parseFloat((1640 + i * 12 + Math.sin(i * 0.8) * 60 + Math.random() * 40).toFixed(2)));
           }
-          mockComparisonList.push({
-            date: dateStr,
-            actual: actualVal,
-            predicted: predVal,
-            error: Math.abs(actualVal - predVal)
+
+          setForecastResult({
+            isMultiModel: true,
+            forecastDates: dates,
+            forecastSeasons: seasons,
+            arimaValues: arimaValues,
+            lstmValues: lstmValues,
+            svmValues: svmValues,
+            metrics: {
+              mape: 3.69,
+              rmse: 36.42
+            }
+          });
+
+          // Build comparison
+          const mockComparisonList = [];
+          const testBaseDate = new Date();
+          for (let i = forecastDays; i > 0; i--) {
+            const d = new Date(testBaseDate);
+            d.setDate(testBaseDate.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0].substring(5); // e.g. "05-13"
+            const actualVal = Math.round(1600 + Math.sin(i) * 120 + Math.random() * 50);
+            const arimaPred = Math.round(1600 + Math.sin(i) * 120);
+            const lstmPred = Math.round(1620 + Math.cos(i * 0.7) * 100);
+            const svmPred = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50);
+            mockComparisonList.push({
+              date: dateStr,
+              actual: actualVal,
+              arima: arimaPred,
+              lstm: lstmPred,
+              svm: svmPred
+            });
+          }
+
+          setBacktestData({
+            comparison: mockComparisonList
+          });
+        } else {
+          // Single model
+          const values = [];
+          for (let i = 0; i < forecastDays; i++) {
+            if (forecastModel === 'svm') {
+              values.push(parseFloat((1640 + i * 12 + Math.sin(i * 0.8) * 60 + Math.random() * 40).toFixed(2)));
+            } else {
+              values.push(parseFloat((1600 + Math.sin(i) * 150 + Math.random() * 80).toFixed(2)));
+            }
+          }
+          const mockMetrics = forecastModel === 'svm'
+            ? { mape: 4.12, rmse: 44.28 }
+            : mockForecast.metrics;
+          setForecastResult({
+            forecastDates: dates,
+            forecastValues: values,
+            forecastSeasons: seasons,
+            metrics: mockMetrics
+          });
+
+          const mockComparisonList = [];
+          const testBaseDate = new Date();
+          for (let i = forecastDays; i > 0; i--) {
+            const d = new Date(testBaseDate);
+            d.setDate(testBaseDate.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0].substring(5);
+            let actualVal, predVal;
+            if (forecastModel === 'svm') {
+              actualVal = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50 + Math.random() * 30);
+              predVal = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50);
+            } else {
+              actualVal = Math.round(1600 + Math.sin(i) * 120 + Math.random() * 50);
+              predVal = Math.round(1600 + Math.sin(i) * 120);
+            }
+            mockComparisonList.push({
+              date: dateStr,
+              actual: actualVal,
+              predicted: predVal,
+              error: Math.abs(actualVal - predVal)
+            });
+          }
+
+          setBacktestData({
+            comparison: mockComparisonList
           });
         }
-
-        setBacktestData({
-          comparison: mockComparisonList
-        });
         setLoading(false);
       }, 1500);
       return;
     }
 
     try {
-      const res = await axios.get('/api/forecast/predict', {
-        params: { days: forecastDays, model: forecastModel, use_seasonal: useSeasonal, include_backtest: includeBacktest }
-      });
-      if (res.data && res.data.code === 200) {
-        setForecastResult(res.data.data);
-        setBacktestData(res.data.data.backtestData || null);
+      if (compareAllModels) {
+        const [arimaRes, lstmRes, svmRes] = await Promise.all([
+          axios.get('/api/forecast/predict', { params: { days: forecastDays, model: 'arima', use_seasonal: useSeasonal, include_backtest: includeBacktest } }),
+          axios.get('/api/forecast/predict', { params: { days: forecastDays, model: 'lstm', use_seasonal: useSeasonal, include_backtest: includeBacktest } }),
+          axios.get('/api/forecast/predict', { params: { days: forecastDays, model: 'svm', use_seasonal: useSeasonal, include_backtest: includeBacktest } })
+        ]);
+        
+        if (arimaRes.data.code === 200 && lstmRes.data.code === 200 && svmRes.data.code === 200) {
+          setForecastResult({
+            isMultiModel: true,
+            forecastDates: arimaRes.data.data.forecastDates,
+            forecastSeasons: arimaRes.data.data.forecastSeasons,
+            arimaValues: arimaRes.data.data.forecastValues,
+            lstmValues: lstmRes.data.data.forecastValues,
+            svmValues: svmRes.data.data.forecastValues,
+            metrics: {
+              mape: arimaRes.data.data.metrics.mape,
+              rmse: arimaRes.data.data.metrics.rmse
+            }
+          });
+
+          const arimaComp = arimaRes.data.data.backtestData?.comparison || [];
+          const lstmComp = lstmRes.data.data.backtestData?.comparison || [];
+          const svmComp = svmRes.data.data.backtestData?.comparison || [];
+          const mergedComp = arimaComp.map((item, idx) => ({
+            date: item.date.substring(5),
+            actual: item.actual,
+            arima: item.predicted,
+            lstm: lstmComp[idx]?.predicted || item.predicted,
+            svm: svmComp[idx]?.predicted || item.predicted
+          }));
+
+          setBacktestData({
+            comparison: mergedComp
+          });
+        } else {
+          alert('One or more AI Models failed to evaluate.');
+        }
       } else {
-        alert('Error: ' + res.data.msg);
+        const res = await axios.get('/api/forecast/predict', {
+          params: { days: forecastDays, model: forecastModel, use_seasonal: useSeasonal, include_backtest: includeBacktest }
+        });
+        if (res.data && res.data.code === 200) {
+          setForecastResult(res.data.data);
+          setBacktestData(res.data.data.backtestData || null);
+        } else {
+          alert('Error: ' + res.data.msg);
+        }
       }
     } catch (e) {
       alert('AI Server sidecar currently offline. Using mock predictor.');
-      // Fallback predictor inside AI view
       const dates = [];
-      const values = [];
       const seasons = [];
       const baseDate = new Date();
       for (let i = 0; i < forecastDays; i++) {
@@ -337,41 +427,91 @@ function App() {
         const month = d.getMonth() + 1; // 1-indexed
         const isPeak = [3, 4, 5, 9, 10, 11].includes(month);
         seasons.push(isPeak ? '旺季' : '淡季');
-        values.push(parseFloat((1600 + Math.sin(i) * 150 + Math.random() * 80).toFixed(2)));
       }
-      setForecastResult({
-        forecastDates: dates,
-        forecastValues: values,
-        forecastSeasons: seasons,
-        metrics: mockForecast.metrics
-      });
 
-      // Dynamically build mock backtest comparison data matching forecastDays
-      const fallbackComparisonList = [];
-      const testBaseDate = new Date();
-      for (let i = forecastDays; i > 0; i--) {
-        const d = new Date(testBaseDate);
-        d.setDate(testBaseDate.getDate() - i);
-        const dateStr = d.toISOString().split('T')[0].substring(5); // e.g. "05-13"
-        let actualVal, predVal;
-        if (forecastModel === 'svm') {
-          actualVal = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50 + Math.random() * 30);
-          predVal = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50);
-        } else {
-          actualVal = Math.round(1600 + Math.sin(i) * 120 + Math.random() * 50);
-          predVal = Math.round(1600 + Math.sin(i) * 120);
+      if (compareAllModels) {
+        const arimaValues = [];
+        const lstmValues = [];
+        const svmValues = [];
+        for (let i = 0; i < forecastDays; i++) {
+          arimaValues.push(parseFloat((1600 + Math.sin(i) * 150 + Math.random() * 80).toFixed(2)));
+          lstmValues.push(parseFloat((1620 + Math.cos(i * 0.7) * 120 + Math.random() * 50).toFixed(2)));
+          svmValues.push(parseFloat((1640 + i * 12 + Math.sin(i * 0.8) * 60 + Math.random() * 40).toFixed(2)));
         }
-        fallbackComparisonList.push({
-          date: dateStr,
-          actual: actualVal,
-          predicted: predVal,
-          error: Math.abs(actualVal - predVal)
+
+        setForecastResult({
+          isMultiModel: true,
+          forecastDates: dates,
+          forecastSeasons: seasons,
+          arimaValues: arimaValues,
+          lstmValues: lstmValues,
+          svmValues: svmValues,
+          metrics: {
+            mape: 3.69,
+            rmse: 36.42
+          }
+        });
+
+        const fallbackComparisonList = [];
+        const testBaseDate = new Date();
+        for (let i = forecastDays; i > 0; i--) {
+          const d = new Date(testBaseDate);
+          d.setDate(testBaseDate.getDate() - i);
+          const dateStr = d.toISOString().split('T')[0].substring(5);
+          const actualVal = Math.round(1600 + Math.sin(i) * 120 + Math.random() * 50);
+          const arimaPred = Math.round(1600 + Math.sin(i) * 120);
+          const lstmPred = Math.round(1620 + Math.cos(i * 0.7) * 100);
+          const svmPred = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50);
+          fallbackComparisonList.push({
+            date: dateStr,
+            actual: actualVal,
+            arima: arimaPred,
+            lstm: lstmPred,
+            svm: svmPred
+          });
+        }
+
+        setBacktestData({
+          comparison: fallbackComparisonList
+        });
+      } else {
+        const values = [];
+        for (let i = 0; i < forecastDays; i++) {
+          values.push(parseFloat((1600 + Math.sin(i) * 150 + Math.random() * 80).toFixed(2)));
+        }
+        setForecastResult({
+          forecastDates: dates,
+          forecastValues: values,
+          forecastSeasons: seasons,
+          metrics: mockForecast.metrics
+        });
+
+        const fallbackComparisonList = [];
+        const testBaseDate = new Date();
+        for (let i = forecastDays; i > 0; i--) {
+          const d = new Date(testBaseDate);
+          d.setDate(testBaseDate.getDate() - i);
+          const dateStr = d.toISOString().split('T')[0].substring(5);
+          let actualVal, predVal;
+          if (forecastModel === 'svm') {
+            actualVal = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50 + Math.random() * 30);
+            predVal = Math.round(1640 - i * 5 + Math.sin(i * 0.8) * 50);
+          } else {
+            actualVal = Math.round(1600 + Math.sin(i) * 120 + Math.random() * 50);
+            predVal = Math.round(1600 + Math.sin(i) * 120);
+          }
+          fallbackComparisonList.push({
+            date: dateStr,
+            actual: actualVal,
+            predicted: predVal,
+            error: Math.abs(actualVal - predVal)
+          });
+        }
+
+        setBacktestData({
+          comparison: fallbackComparisonList
         });
       }
-
-      setBacktestData({
-        comparison: fallbackComparisonList
-      });
     }
     setLoading(false);
   };
@@ -533,6 +673,60 @@ function App() {
 
   const getForecastOption = () => {
     if (!forecastResult) return {};
+    
+    const isMulti = forecastResult.isMultiModel;
+    
+    if (isMulti) {
+      return {
+        backgroundColor: 'transparent',
+        tooltip: { trigger: 'axis' },
+        legend: { data: ['ARIMA 预测', 'LSTM 预测', 'SVM 预测'], textStyle: { color: '#94a3b8' }, top: '0%' },
+        grid: { left: '3%', right: '3%', bottom: '12%', top: '18%', containLabel: true },
+        xAxis: {
+          type: 'category',
+          data: forecastResult.forecastDates,
+          axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+          axisLabel: { color: '#94a3b8' }
+        },
+        yAxis: {
+          type: 'value',
+          name: '预测产量 (件)',
+          nameTextStyle: { color: '#94a3b8' },
+          axisLabel: { color: '#94a3b8' },
+          splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }
+        },
+        series: [
+          {
+            name: 'ARIMA 预测',
+            type: 'line',
+            smooth: true,
+            symbolSize: 6,
+            itemStyle: { color: '#6366f1' },
+            lineStyle: { width: 3 },
+            data: forecastResult.arimaValues
+          },
+          {
+            name: 'LSTM 预测',
+            type: 'line',
+            smooth: true,
+            symbolSize: 6,
+            itemStyle: { color: '#10b981' },
+            lineStyle: { width: 3 },
+            data: forecastResult.lstmValues
+          },
+          {
+            name: 'SVM 预测',
+            type: 'line',
+            smooth: true,
+            symbolSize: 6,
+            itemStyle: { color: '#06b6d4' },
+            lineStyle: { width: 3 },
+            data: forecastResult.svmValues
+          }
+        ]
+      };
+    }
+    
     return {
       backgroundColor: 'transparent',
       tooltip: { trigger: 'axis' },
@@ -575,6 +769,72 @@ function App() {
     if (!backtestData || !backtestData.comparison) return {};
 
     const comparison = backtestData.comparison;
+    const isMulti = forecastResult?.isMultiModel;
+    
+    if (isMulti) {
+      return {
+        backgroundColor: 'transparent',
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' }
+        },
+        legend: {
+          data: ['实际产量', 'ARIMA 预测', 'LSTM 预测', 'SVM 预测'],
+          textStyle: { color: '#64748b' }
+        },
+        grid: { left: '3%', right: '3%', bottom: '10%', containLabel: true },
+        xAxis: {
+          type: 'category',
+          data: comparison.map(d => d.date),
+          axisLine: { lineStyle: { color: 'rgba(0,0,0,0.1)' } },
+          axisLabel: { color: '#64748b', rotate: 15 }
+        },
+        yAxis: {
+          type: 'value',
+          name: '产量 (件)',
+          nameTextStyle: { color: '#64748b' },
+          axisLabel: { color: '#64748b' },
+          splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+        },
+        series: [
+          {
+            name: '实际产量',
+            type: 'bar',
+            barWidth: '20%',
+            itemStyle: { color: '#94a3b8' },
+            data: comparison.map(d => d.actual)
+          },
+          {
+            name: 'ARIMA 预测',
+            type: 'line',
+            smooth: true,
+            symbolSize: 6,
+            itemStyle: { color: '#6366f1' },
+            lineStyle: { width: 2 },
+            data: comparison.map(d => d.arima)
+          },
+          {
+            name: 'LSTM 预测',
+            type: 'line',
+            smooth: true,
+            symbolSize: 6,
+            itemStyle: { color: '#10b981' },
+            lineStyle: { width: 2 },
+            data: comparison.map(d => d.lstm)
+          },
+          {
+            name: 'SVM 预测',
+            type: 'line',
+            smooth: true,
+            symbolSize: 6,
+            itemStyle: { color: '#06b6d4' },
+            lineStyle: { width: 2 },
+            data: comparison.map(d => d.svm)
+          }
+        ]
+      };
+    }
+
     return {
       backgroundColor: 'transparent',
       tooltip: {
@@ -1112,11 +1372,12 @@ function App() {
                       </select>
                     </div>
 
-                    <div className="filter-group">
+                    <div className="filter-group" style={{ opacity: compareAllModels ? 0.5 : 1 }}>
                       <label>选择时序预测模型</label>
                       <select 
                         className="select-glass"
                         value={forecastModel}
+                        disabled={compareAllModels}
                         onChange={(e) => setForecastModel(e.target.value)}
                       >
                         <option value="arima">ARIMA (统计学自回归模型)</option>
@@ -1126,6 +1387,15 @@ function App() {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '12px 0' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600 }}>
+                        <input 
+                          type="checkbox" 
+                          checked={compareAllModels} 
+                          onChange={(e) => setCompareAllModels(e.target.checked)}
+                          style={{ accentColor: 'var(--primary)' }}
+                        />
+                        🚀 启用三模型同时对比模式
+                      </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                         <input 
                           type="checkbox" 
@@ -1218,36 +1488,73 @@ function App() {
                     <div className="data-table-container">
                       <table className="data-table">
                         <thead>
-                          <tr>
-                            <th>预测日期</th>
-                            <th>季节</th>
-                            <th>预测产量 (件)</th>
-                            <th>可信度</th>
-                            <th>调度建议</th>
-                          </tr>
+                          {forecastResult.isMultiModel ? (
+                            <tr>
+                              <th>预测日期</th>
+                              <th>季节</th>
+                              <th style={{ color: '#6366f1' }}>ARIMA 预测 (件)</th>
+                              <th style={{ color: '#10b981' }}>LSTM 预测 (件)</th>
+                              <th style={{ color: '#06b6d4' }}>SVM 预测 (件)</th>
+                              <th>最佳推荐决策</th>
+                            </tr>
+                          ) : (
+                            <tr>
+                              <th>预测日期</th>
+                              <th>季节</th>
+                              <th>预测产量 (件)</th>
+                              <th>可信度</th>
+                              <th>调度建议</th>
+                            </tr>
+                          )}
                         </thead>
                         <tbody>
-                          {forecastResult.forecastDates.map((date, idx) => (
-                            <tr key={idx}>
-                              <td><strong>{date}</strong></td>
-                              <td>
-                                <span className={`status-badge ${forecastResult.forecastSeasons?.[idx] === '旺季' ? 'badge-orange' : 'badge-blue'}`}>
-                                  {forecastResult.forecastSeasons?.[idx] || '未知'}
-                                </span>
-                              </td>
-                              <td><span style={{ color: '#06b6d4', fontWeight: 600 }}>{Math.round(forecastResult.forecastValues[idx])} 件</span></td>
-                              <td>
-                                {forecastResult.forecastValues[idx] > 1800
-                                  ? <span className="status-badge badge-orange">高负荷</span>
-                                  : <span className="status-badge badge-green">正常</span>}
-                              </td>
-                              <td style={{ fontSize: '12px' }}>
-                                {forecastResult.forecastValues[idx] > 1750
-                                  ? '⚠️ 高负荷排产，优化能源储备'
-                                  : '✅ 正常批次排产'}
-                              </td>
-                            </tr>
-                          ))}
+                          {forecastResult.forecastDates.map((date, idx) => {
+                            if (forecastResult.isMultiModel) {
+                              const arimaVal = Math.round(forecastResult.arimaValues[idx]);
+                              const lstmVal = Math.round(forecastResult.lstmValues[idx]);
+                              const svmVal = Math.round(forecastResult.svmValues[idx]);
+                              return (
+                                <tr key={idx}>
+                                  <td><strong>{date}</strong></td>
+                                  <td>
+                                    <span className={`status-badge ${forecastResult.forecastSeasons?.[idx] === '旺季' ? 'badge-orange' : 'badge-blue'}`}>
+                                      {forecastResult.forecastSeasons?.[idx] || '未知'}
+                                    </span>
+                                  </td>
+                                  <td><span style={{ color: '#6366f1', fontWeight: 600 }}>{arimaVal} 件</span></td>
+                                  <td><span style={{ color: '#10b981', fontWeight: 600 }}>{lstmVal} 件</span></td>
+                                  <td><span style={{ color: '#06b6d4', fontWeight: 600 }}>{svmVal} 件</span></td>
+                                  <td style={{ fontSize: '12px' }}>
+                                    <span className="status-badge badge-green" style={{ marginRight: '6px' }}>🏆 推荐 LSTM</span>
+                                    {lstmVal > 1750 ? '⚠️ 高负荷，建议错峰排产' : '✅ 产量适中，正常排产'}
+                                  </td>
+                                </tr>
+                              );
+                            }
+                            
+                            const val = Math.round(forecastResult.forecastValues[idx]);
+                            return (
+                              <tr key={idx}>
+                                <td><strong>{date}</strong></td>
+                                <td>
+                                  <span className={`status-badge ${forecastResult.forecastSeasons?.[idx] === '旺季' ? 'badge-orange' : 'badge-blue'}`}>
+                                    {forecastResult.forecastSeasons?.[idx] || '未知'}
+                                  </span>
+                                </td>
+                                <td><span style={{ color: '#06b6d4', fontWeight: 600 }}>{val} 件</span></td>
+                                <td>
+                                  {val > 1800
+                                    ? <span className="status-badge badge-orange">高负荷</span>
+                                    : <span className="status-badge badge-green">正常</span>}
+                                </td>
+                                <td style={{ fontSize: '12px' }}>
+                                  {val > 1750
+                                    ? '⚠️ 高负荷排产，优化能源储备'
+                                    : '✅ 正常批次排产'}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>

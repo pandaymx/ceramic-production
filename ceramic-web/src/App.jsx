@@ -294,7 +294,7 @@ function App() {
           // Build comparison
           const mockComparisonList = [];
           const testBaseDate = new Date();
-          for (let i = forecastDays; i > 0; i--) {
+          for (let i = forecastDays - 1; i >= 0; i--) {
             const d = new Date(testBaseDate);
             d.setDate(testBaseDate.getDate() - i);
             const dateStr = d.toISOString().split('T')[0].substring(5); // e.g. "05-13"
@@ -336,7 +336,7 @@ function App() {
 
           const mockComparisonList = [];
           const testBaseDate = new Date();
-          for (let i = forecastDays; i > 0; i--) {
+          for (let i = forecastDays - 1; i >= 0; i--) {
             const d = new Date(testBaseDate);
             d.setDate(testBaseDate.getDate() - i);
             const dateStr = d.toISOString().split('T')[0].substring(5);
@@ -455,7 +455,7 @@ function App() {
             // Java backend fallback kicked in, generate simulated comparison to avoid blank chart
             const fallbackComparisonList = [];
             const testBaseDate = new Date();
-            for (let i = forecastDays; i > 0; i--) {
+            for (let i = forecastDays - 1; i >= 0; i--) {
               const d = new Date(testBaseDate);
               d.setDate(testBaseDate.getDate() - i);
               const dateStr = d.toISOString().split('T')[0].substring(5);
@@ -503,7 +503,7 @@ function App() {
             // Generate fallback single model comparison
             const fallbackComparisonList = [];
             const testBaseDate = new Date();
-            for (let i = forecastDays; i > 0; i--) {
+            for (let i = forecastDays - 1; i >= 0; i--) {
               const d = new Date(testBaseDate);
               d.setDate(testBaseDate.getDate() - i);
               const dateStr = d.toISOString().split('T')[0].substring(5);
@@ -572,7 +572,7 @@ function App() {
 
         const fallbackComparisonList = [];
         const testBaseDate = new Date();
-        for (let i = forecastDays; i > 0; i--) {
+        for (let i = forecastDays - 1; i >= 0; i--) {
           const d = new Date(testBaseDate);
           d.setDate(testBaseDate.getDate() - i);
           const dateStr = d.toISOString().split('T')[0].substring(5);
@@ -606,7 +606,7 @@ function App() {
 
         const fallbackComparisonList = [];
         const testBaseDate = new Date();
-        for (let i = forecastDays; i > 0; i--) {
+        for (let i = forecastDays - 1; i >= 0; i--) {
           const d = new Date(testBaseDate);
           d.setDate(testBaseDate.getDate() - i);
           const dateStr = d.toISOString().split('T')[0].substring(5);
@@ -1639,7 +1639,7 @@ function App() {
                     <h3><TrendingUp size={16} style={{ color: 'var(--secondary)' }} /> 预测产量走势曲线</h3>
                     <div className="chart-wrapper">
                       {forecastResult ? (
-                        <ReactECharts option={getForecastOption()} style={{ height: '100%' }} />
+                        <ReactECharts option={getForecastOption()} style={{ height: '100%' }} notMerge={true} />
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)' }}>
                           <Cpu size={40} className="text-secondary" style={{ marginBottom: '16px', opacity: 0.3 }} />
@@ -1655,7 +1655,7 @@ function App() {
                   <div className="chart-card glass-panel fade-in" style={{ minHeight: '400px' }}>
                     <h3><BarChart3 size={16} style={{ color: 'var(--primary)' }} /> 历史测试集对比分析</h3>
                     <div className="chart-wrapper">
-                      <ReactECharts option={getComparisonOption()} style={{ height: '100%' }} />
+                      <ReactECharts option={getComparisonOption()} style={{ height: '100%' }} notMerge={true} />
                     </div>
                   </div>
                 )}

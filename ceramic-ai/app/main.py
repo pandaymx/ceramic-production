@@ -18,13 +18,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from urllib.parse import urlparse
+
 # PostgreSQL Database Connection Parameters matching application.yml
+db_url = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/ceramic_system")
+parsed_url = urlparse(db_url)
+
 DB_CONFIG = {
-    "host": "localhost",
-    "port": 5432,
-    "database": "ceramic_system",
-    "user": "postgres",
-    "password": "postgres"
+    "host": parsed_url.hostname or "localhost",
+    "port": parsed_url.port or 5432,
+    "database": parsed_url.path.lstrip('/') or "ceramic_system",
+    "user": parsed_url.username or "postgres",
+    "password": parsed_url.password or "postgres"
 }
 
 def fetch_historical_data():
@@ -97,12 +102,13 @@ def predict(
                 item['season_label'] = "旺季" if season == "peak" else "淡季"
         
         # Add current season info
-        current_month = datetime.now().month
-        backtest_data['current_season'] = {
-            'month': current_month,
-            'type': get_season_type(current_month),
-            'label': "旺季" if get_season_type(current_month) == "peak" else "淡季"
-        }
+        if backtest_data is not None:
+            current_month = datetime.now().month
+            backtest_data['current_season'] = {
+                'month': current_month,
+                'type': get_season_type(current_month),
+                'label': "旺季" if get_season_type(current_month) == "peak" else "淡季"
+            }
     
     # 6. Compile unified response format
     result = {
